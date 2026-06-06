@@ -1,0 +1,36 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "dataagent"
+version = "0.1.0"
+description = "Agent analyste data autonome (LangGraph v1.0 + DuckDB + Polars)"
+requires-python = ">=3.11"
+dependencies = [
+  "duckdb>=1.0",
+  "polars>=1.0",
+  "pyarrow>=15.0",
+]
+
+[project.optional-dependencies]
+agent = [
+  "langgraph>=1.0",
+  "langchain-anthropic",
+  "plotly",
+  "kaleido",
+  "fastapi",
+  "uvicorn",
+]
+dev = [
+  "pytest>=8.0",
+  "pytest-cov",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/dataagent"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+addopts = "-q"
+testpaths = ["tests"]

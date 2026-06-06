@@ -1,0 +1,20 @@
+# Données brutes (lourdes, téléchargées séparément depuis Kaggle)
+data/raw/*.csv
+
+# Sorties générées
+reports/*.png
+reports/*.html
+*.duckdb
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Secrets
+.env
