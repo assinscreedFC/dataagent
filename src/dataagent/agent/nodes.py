@@ -200,8 +200,8 @@ def _execute_subquestion(
 def sql_tool_node(state: AgentState) -> dict:
     """Génère et exécute du SQL pour chaque sous-question du plan.
 
-    Minimal (D-12) : pas de validation ni retry (phase 2).
-    Erreur SQL -> finding d'erreur propre, pas de crash, pas de re-raise.
+    Durci (phase 2) : validation EXPLAIN pré-exec + retry borné (SQL_MAX_RETRIES).
+    Erreur SQL persistante -> finding d'erreur propre, pas de crash, pas de re-raise.
     Incrémente iterations (structure prête phase 4, D-10).
 
     Retourne {"findings": [...], "iterations": N+1}.
