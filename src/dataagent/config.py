@@ -19,5 +19,9 @@ ANOMALY_Z_THRESHOLD = 3.0  # |z| > seuil => anomalie (D-03)
 GEMINI_MODEL_FLASH = os.environ.get("GEMINI_MODEL_FLASH", "gemini-2.5-flash")
 GEMINI_MODEL_PRO = os.environ.get("GEMINI_MODEL_PRO", "gemini-2.5-flash")
 
+# Store du checkpointer SqliteSaver (resumabilité — TOOL-07, D-02).
+# Override possible via env CHECKPOINT_DB. Gitignored (*.sqlite déjà dans .gitignore).
+CHECKPOINT_DB = Path(os.environ.get("CHECKPOINT_DB", PROJECT_ROOT / ".checkpoints.sqlite"))
+
 # Clé API Gemini — chargée depuis l'env/.env (D-06)
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
