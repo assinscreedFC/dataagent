@@ -10,10 +10,12 @@ import logging
 import re
 
 import duckdb
+import polars as pl
 
 from dataagent.agent.llm import flash_llm, pro_llm
 from dataagent.agent.schema_introspect import schema_description
 from dataagent.agent.state import AgentState
+from dataagent.agent.stats import correlation, detect_anomalies
 from dataagent.config import SQL_MAX_RETRIES
 
 logger = logging.getLogger(__name__)
@@ -248,6 +250,85 @@ def _serialize_findings(findings: list[dict]) -> str:
         parts.append("\n".join(lines))
 
     return "\n\n".join(parts)
+
+
+# ---------------------------------------------------------------------------
+# stats_tool_node
+# ---------------------------------------------------------------------------
+
+
+def stats_tool_node(state: AgentState) -> dict:
+    """Orchestre les fonctions stats pures (corrélation, anomalies) sur les findings SQL.
+
+    Consomme les findings existants (source sql_tool), reconstruit un DataFrame Polars
+    depuis rows/columns, calcule corrélation Pearson + détection d'anomalies z-score.
+
+    Données insuffisantes ou non numériques → finding explicit 'insufficient_data' (D-04).
+    Pas d'appel LLM, pas d'incrément iterations (router/critic gère ça en Phase 4).
+
+    Retourne {"findings": [...]}, appendé via reducer add.
+    """
+    existing_findings: list[dict] = state.get("findings", [])
+    new_findings: list[dict] = []
+
+    corr_pushed = False
+    anomaly_pushed = False
+
+    for f in existing_findings:
+        # Ignorer les findings en erreur (pas de rows/columns)
+        if "error" in f or "rows" not in f or "columns" not in f:
+            continue
+
+        rows = f["rows"]
+        columns = f["columns"]
+
+        # Reconstruire un DataFrame Polars (guard: try/except si rows mal formées)
+        try:
+            df = pl.DataFrame(rows, schema=columns, orient="row")
+        except Exception:  # noqa: BLE001
+            logger.warning("stats_tool_node: impossible de reconstruire DataFrame depuis finding")
+            continue
+
+        if df.height < 2:
+            continue
+
+        # Identifier les colonnes numériques
+        numeric_cols = [c for c in df.columns if df[c].dtype.is_numeric()]
+
+        # Corrélation sur la première paire numérique
+        if len(numeric_cols) >= 2 and not corr_pushed:
+            col_a, col_b = numeric_cols[0], numeric_cols[1]
+            corr_val = correlation(df, col_a, col_b)
+            if corr_val is not None:
+                new_findings.append({
+                    "source": "stats_tool",
+                    "analysis": "correlation",
+                    "columns": [col_a, col_b],
+                    "value": corr_val,
+                })
+                corr_pushed = True
+
+        # Détection d'anomalies sur chaque colonne numérique
+        for col in numeric_cols:
+            anomalies = detect_anomalies(df[col].to_list())
+            if anomalies:
+                new_findings.append({
+                    "source": "stats_tool",
+                    "analysis": "anomaly",
+                    "column": col,
+                    "anomalies": anomalies,
+                })
+                anomaly_pushed = True
+
+    # Si aucune stat n'a pu être calculée → finding insufficient_data (D-04)
+    if not corr_pushed and not anomaly_pushed:
+        new_findings.append({
+            "source": "stats_tool",
+            "analysis": "insufficient_data",
+            "detail": "<2 points numériques exploitables ou colonnes non numériques",
+        })
+
+    return {"findings": new_findings}
 
 
 def synthesizer_node(state: AgentState) -> dict:
