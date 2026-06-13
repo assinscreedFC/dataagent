@@ -8,6 +8,7 @@ Trois nodes (fonctions state -> dict) consommés par le graphe (plan 03) :
 
 import logging
 import re
+from typing import Literal
 
 import duckdb
 import polars as pl
@@ -403,6 +404,121 @@ def viz_tool_node(state: AgentState) -> dict:
         "skipped": "no chartable data",
     })
     return {"findings": new_findings}
+
+
+# ---------------------------------------------------------------------------
+# route_subquestion
+# ---------------------------------------------------------------------------
+
+# Mots-clés stats : corrélation, anomalie, écart-type, tendance (et variantes)
+_STATS_KEYWORDS = re.compile(
+    r"corr[eé]l|anomalie|aberrant|[eé]cart[- ]type|tendance",
+    re.IGNORECASE,
+)
+
+# Mots-clés viz : graphe, visualise, courbe, histogramme, chart, plot, diagramme
+_VIZ_KEYWORDS = re.compile(
+    r"graphe|visualis|courbe|histogramme|chart|plot|diagramme",
+    re.IGNORECASE,
+)
+
+
+def route_subquestion(
+    state: AgentState,
+) -> Literal["sql_tool", "stats_tool", "viz_tool"]:
+    """Retourne le tool approprié pour la sous-question courante (D-01, TOOL-04).
+
+    Heuristique déterministe par mots-clés sur state["plan"][state["current_step"]].
+    Garde-fou : si current_step >= len(plan) ou plan vide → "sql_tool" (pas d'IndexError).
+
+    Convention (pour add_conditional_edges + path_map du Plan 02) :
+      - "stats_tool" si mots-clés corrélation/anomalie/écart-type/tendance
+      - "viz_tool"   si mots-clés graphe/visualise/courbe/histogramme/chart/plot/diagramme
+      - "sql_tool"   sinon (défaut)
+    """
+    plan: list[str] = state.get("plan") or []
+    current_step: int = state.get("current_step", 0)
+
+    # Garde-fou index hors borne
+    if not plan or current_step >= len(plan):
+        return "sql_tool"
+
+    subquestion = plan[current_step]
+
+    if _STATS_KEYWORDS.search(subquestion):
+        return "stats_tool"
+    if _VIZ_KEYWORDS.search(subquestion):
+        return "viz_tool"
+    return "sql_tool"
+
+
+# ---------------------------------------------------------------------------
+# critic_node
+# ---------------------------------------------------------------------------
+
+
+def critic_node(state: AgentState) -> dict:
+    """Juge si les findings accumulés répondent suffisamment à la question (TOOL-05, TOOL-06).
+
+    Utilise flash_llm (cheap/rapide). TOUJOURS incrémente iterations et current_step
+    (D-04, D-06) — le hard cap et la décision de reboucle sont gérés par le
+    conditional edge du Plan 02 (add_conditional_edges + path_map).
+
+    Convention de décision (pour le Plan 02) :
+      Le DERNIER finding source="critic" expose la clé "sufficient": bool.
+      True  → findings suffisants → le Plan 02 routera vers synthesizer.
+      False → insuffisant        → le Plan 02 routera vers router si iterations < max.
+
+    Retourne : {"findings": [...], "iterations": N+1, "current_step": M+1}
+    """
+    question = state["question"]
+    findings = state.get("findings", [])
+    current_iter = state["iterations"]
+    current_step = state.get("current_step", 0)
+
+    # Résumé court des findings pour le prompt (éviter un prompt trop long)
+    findings_summary = f"{len(findings)} finding(s) accumulé(s)"
+    if findings:
+        sources = {f.get("source", "?") for f in findings}
+        findings_summary += f" — sources : {', '.join(sorted(sources))}"
+
+    system_msg = (
+        "Tu es un critic data analyst. "
+        "Réponds UNIQUEMENT par 'SUFFISANT' ou 'INSUFFISANT'.\n"
+        "SUFFISANT = les findings permettent de répondre à la question.\n"
+        "INSUFFISANT = il manque des données importantes."
+    )
+    human_msg = (
+        f"Question : {question}\n\n"
+        f"Findings : {findings_summary}\n\n"
+        "Verdict (SUFFISANT ou INSUFFISANT) ?"
+    )
+
+    response = flash_llm().invoke([("system", system_msg), ("human", human_msg)])
+    raw: str = response.content.strip()
+
+    # Parse insensible à la casse — défaut INSUFFISANT si hors attendu (sécurité)
+    # NB: tester "insuffisant" avant "suffisant" pour éviter faux positif (sous-chaîne)
+    raw_lower = raw.lower()
+    if "insuffisant" in raw_lower:
+        sufficient = False
+    elif "suffisant" in raw_lower:
+        sufficient = True
+    else:
+        sufficient = False  # réponse hors attendu → insuffisant par défaut
+
+    new_iterations = current_iter + 1
+    critic_finding = {
+        "source": "critic",
+        "sufficient": sufficient,
+        "iteration": new_iterations,
+    }
+
+    return {
+        "findings": [critic_finding],
+        "iterations": new_iterations,
+        "current_step": current_step + 1,
+    }
 
 
 def synthesizer_node(state: AgentState) -> dict:
