@@ -5,9 +5,16 @@ du nom de fichier en retirant le préfixe `olist_` et le suffixe `_dataset`
 (ex: `olist_order_items_dataset.csv` -> table `order_items`).
 """
 
+import logging
+import re
 from pathlib import Path
 
 import duckdb
+
+logger = logging.getLogger(__name__)
+
+# Regex de validation du nom de table : doit commencer par lettre ou underscore (D-05, HARD-04)
+_TABLE_NAME_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 
 
 def connect(db_path: str = ":memory:") -> duckdb.DuckDBPyConnection:
@@ -33,6 +40,14 @@ def load_csvs_to_duckdb(
     loaded: list[str] = []
     for csv_path in sorted(csv_dir.glob("*.csv")):
         table = table_name(csv_path)
+        # Validation du nom de table avant interpolation DDL (D-05, HARD-04)
+        if not _TABLE_NAME_RE.match(table):
+            logger.warning(
+                "loader: nom de table non conforme, fichier ignoré: %r (table=%r)",
+                csv_path.name,
+                table,
+            )
+            continue
         conn.execute(
             f'CREATE OR REPLACE TABLE "{table}" AS '
             "SELECT * FROM read_csv_auto(?)",

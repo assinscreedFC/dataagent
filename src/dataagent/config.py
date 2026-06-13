@@ -25,3 +25,22 @@ CHECKPOINT_DB = Path(os.environ.get("CHECKPOINT_DB", PROJECT_ROOT / ".checkpoint
 
 # Clé API Gemini — chargée depuis l'env/.env (D-06)
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+
+# Mots-clés SQL d'écriture/DDL interdits (D-04, HARD-03)
+# Utilisés par _is_write_sql dans nodes.py pour rejeter les requêtes write/DDL
+# générées par le LLM avant toute validation ou exécution.
+SQL_FORBIDDEN_KEYWORDS: tuple[str, ...] = (
+    "DROP",
+    "DELETE",
+    "INSERT",
+    "UPDATE",
+    "CREATE",
+    "ALTER",
+    "COPY",
+    "ATTACH",
+    "DETACH",
+    "PRAGMA",
+    "CALL",
+    "REPLACE",
+    "TRUNCATE",
+)

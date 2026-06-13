@@ -375,3 +375,118 @@ def test_validate_sql_rejects_unknown_column(conn):
     assert result is not None
     assert isinstance(result, str)
     assert len(result) > 0
+
+
+# ---------------------------------------------------------------------------
+# Tests write/DDL guard — HARD-03 (D-04, plan 07-02 Task 1)
+# ---------------------------------------------------------------------------
+
+
+def test_is_write_sql_detects_drop():
+    """_is_write_sql retourne True sur DROP TABLE."""
+    from dataagent.agent.nodes import _is_write_sql
+
+    assert _is_write_sql("DROP TABLE orders") is True
+
+
+def test_is_write_sql_detects_delete():
+    """_is_write_sql retourne True sur DELETE FROM."""
+    from dataagent.agent.nodes import _is_write_sql
+
+    assert _is_write_sql("DELETE FROM orders") is True
+
+
+def test_is_write_sql_false_positive_guard():
+    """_is_write_sql retourne False sur SELECT contenant 'undropped' (word-boundary)."""
+    from dataagent.agent.nodes import _is_write_sql
+
+    assert _is_write_sql("SELECT * FROM orders WHERE name='undropped'") is False
+
+
+def test_is_write_sql_select_passes():
+    """_is_write_sql retourne False sur un SELECT normal."""
+    from dataagent.agent.nodes import _is_write_sql
+
+    assert _is_write_sql("SELECT COUNT(*) FROM orders") is False
+
+
+def test_is_write_sql_with_passes():
+    """_is_write_sql retourne False sur un CTE WITH."""
+    from dataagent.agent.nodes import _is_write_sql
+
+    assert _is_write_sql("WITH t AS (SELECT 1) SELECT * FROM t") is False
+
+
+def test_is_write_sql_explain_passes():
+    """_is_write_sql retourne False sur EXPLAIN SELECT."""
+    from dataagent.agent.nodes import _is_write_sql
+
+    assert _is_write_sql("EXPLAIN SELECT 1") is False
+
+
+def test_is_write_sql_detects_insert():
+    """_is_write_sql retourne True sur INSERT INTO."""
+    from dataagent.agent.nodes import _is_write_sql
+
+    assert _is_write_sql("INSERT INTO orders VALUES (1)") is True
+
+
+def test_is_write_sql_detects_create():
+    """_is_write_sql retourne True sur CREATE TABLE."""
+    from dataagent.agent.nodes import _is_write_sql
+
+    assert _is_write_sql("CREATE TABLE foo AS SELECT 1") is True
+
+
+def test_execute_subquestion_write_guard_blocks_drop(conn, monkeypatch):
+    """_execute_subquestion retourne un finding d'erreur sans exécuter DROP TABLE."""
+    from dataagent.agent import nodes
+    from dataagent.agent.schema_introspect import schema_description
+
+    # LLM génère un SQL write/DDL
+    monkeypatch.setattr(nodes, "flash_llm", lambda: _FakeLLM("DROP TABLE orders"))
+
+    schema = schema_description(conn)
+    # Vérifier que la table orders existe avant la tentative
+    count_before = conn.execute("SELECT COUNT(*) FROM orders").fetchone()[0]
+
+    finding = nodes._execute_subquestion(conn, schema, "Supprimer les commandes")
+
+    # Finding d'erreur — pas d'exécution
+    assert "error" in finding
+    assert (
+        "non autorisé" in finding["error"].lower()
+        or "write" in finding["error"].lower()
+        or "bloqué" in finding["error"].lower()
+    )
+    assert finding["source"] == "sql_tool"
+
+    # Table intacte — pas de retry, pas d'exécution
+    count_after = conn.execute("SELECT COUNT(*) FROM orders").fetchone()[0]
+    assert count_after == count_before
+
+
+def test_execute_subquestion_write_guard_no_retry(conn, monkeypatch):
+    """Write guard bloque immédiatement sans retry (LLM appelé une seule fois)."""
+    from dataagent.agent import nodes
+    from dataagent.agent.schema_introspect import schema_description
+
+    call_count = 0
+
+    class _CountingLLM:
+        def invoke(self, messages):  # noqa: ANN001
+            nonlocal call_count
+            call_count += 1
+
+            class _R:
+                content = "DROP TABLE orders"
+
+            return _R()
+
+    monkeypatch.setattr(nodes, "flash_llm", lambda: _CountingLLM())
+
+    schema = schema_description(conn)
+    finding = nodes._execute_subquestion(conn, schema, "Supprimer les commandes")
+
+    assert "error" in finding
+    assert call_count == 1, f"LLM appelé {call_count} fois — attendu 1 (pas de retry)"

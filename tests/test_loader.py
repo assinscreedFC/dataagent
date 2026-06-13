@@ -39,3 +39,78 @@ def test_missing_dir_raises():
     with pytest.raises(FileNotFoundError):
         load_csvs_to_duckdb(c, "n_existe_pas_xyz")
     c.close()
+
+
+# ---------------------------------------------------------------------------
+# Tests validation nom de table — HARD-04 (D-05, plan 07-02 Task 1)
+# ---------------------------------------------------------------------------
+
+
+def test_invalid_table_name_skipped_with_warning(tmp_path, caplog):
+    """Un CSV dont le nom de table dérivé commence par un chiffre est ignoré avec warning."""
+    import logging
+
+    import polars as pl
+
+    # Fichier avec nom de table non conforme (commence par chiffre après strip préfixe/suffixe)
+    # table_name("123bad.csv") → "123bad" (pas de préfixe olist_, pas de suffixe _dataset)
+    pl.DataFrame({"id": [1, 2]}).write_csv(tmp_path / "123bad.csv")
+    # Fichier valide pour que loaded ne soit pas vide
+    pl.DataFrame({"order_id": ["o1"], "price": [10.0]}).write_csv(tmp_path / "olist_orders_dataset.csv")
+
+    c = connect()
+    with caplog.at_level(logging.WARNING, logger="dataagent.data.loader"):
+        loaded = load_csvs_to_duckdb(c, tmp_path)
+    c.close()
+
+    # Le fichier non conforme est ignoré
+    assert "123bad" not in loaded
+    # La table valide est chargée
+    assert "orders" in loaded
+    # Un warning a été émis
+    assert any("non conforme" in record.message or "ignoré" in record.message for record in caplog.records)
+
+
+def test_invalid_table_name_does_not_crash_other_files(tmp_path):
+    """Un CSV non conforme n'empêche pas le chargement des autres CSV valides."""
+    import polars as pl
+
+    pl.DataFrame({"id": [1]}).write_csv(tmp_path / "123bad.csv")
+    pl.DataFrame({"order_id": ["o1"]}).write_csv(tmp_path / "olist_orders_dataset.csv")
+    pl.DataFrame({"order_id": ["o1"], "product_id": ["p1"], "price": [10.0], "order_item_id": [1], "freight_value": [1.0]}).write_csv(
+        tmp_path / "olist_order_items_dataset.csv"
+    )
+
+    c = connect()
+    loaded = load_csvs_to_duckdb(c, tmp_path)
+    c.close()
+
+    assert "orders" in loaded
+    assert "order_items" in loaded
+    assert "123bad" not in loaded
+
+
+def test_all_invalid_table_names_raises(tmp_path):
+    """Si tous les CSV ont des noms non conformes, FileNotFoundError est levé (loaded vide)."""
+    import polars as pl
+
+    pl.DataFrame({"id": [1]}).write_csv(tmp_path / "123bad.csv")
+    pl.DataFrame({"id": [2]}).write_csv(tmp_path / "456also_bad.csv")
+
+    c = connect()
+    with pytest.raises(FileNotFoundError):
+        load_csvs_to_duckdb(c, tmp_path)
+    c.close()
+
+
+def test_conformant_table_name_loads_normally(tmp_path):
+    """Un CSV avec nom de table conforme se charge normalement."""
+    import polars as pl
+
+    pl.DataFrame({"order_id": ["o1"], "price": [100.0]}).write_csv(tmp_path / "olist_orders_dataset.csv")
+
+    c = connect()
+    loaded = load_csvs_to_duckdb(c, tmp_path)
+    c.close()
+
+    assert "orders" in loaded

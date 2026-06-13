@@ -18,9 +18,28 @@ from dataagent.agent.schema_introspect import schema_description
 from dataagent.agent.state import AgentState
 from dataagent.agent.stats import correlation, detect_anomalies
 from dataagent.agent.viz import render_chart
-from dataagent.config import SQL_MAX_RETRIES
+from dataagent.config import SQL_FORBIDDEN_KEYWORDS, SQL_MAX_RETRIES
 
 logger = logging.getLogger(__name__)
+
+# ---------------------------------------------------------------------------
+# _is_write_sql guard (per D-04 HARD-03)
+# ---------------------------------------------------------------------------
+
+_WRITE_SQL_RE = re.compile(
+    r"\b(" + "|".join(SQL_FORBIDDEN_KEYWORDS) + r")\b",
+    re.IGNORECASE,
+)
+
+
+def _is_write_sql(sql: str) -> bool:
+    """Retourne True si le SQL contient un mot-clé write/DDL interdit (D-04, HARD-03).
+
+    Utilise une regex word-boundary case-insensitive pour éviter les faux
+    positifs sur des sous-chaînes (ex: "undropped" ne matche pas DROP).
+    Seuls SELECT/WITH/EXPLAIN passent.
+    """
+    return bool(_WRITE_SQL_RE.search(sql))
 
 
 # ---------------------------------------------------------------------------
@@ -248,6 +267,21 @@ def _execute_subquestion(
             sql = _generate_sql(schema, subquestion)
         else:
             sql = _regenerate_sql(schema, subquestion, bad_sql=last_sql, error=last_error)
+
+        # Garde write/DDL (D-04, HARD-03) — rejeter avant validation/exec, pas de retry
+        if _is_write_sql(sql):
+            logger.warning(
+                "_execute_subquestion: SQL write/DDL bloqué — subquestion=%r sql=%r",
+                subquestion,
+                sql,
+            )
+            return {
+                "source": "sql_tool",
+                "subquestion": subquestion,
+                "sql": sql,
+                "error": "SQL non autorisé (write/DDL bloqué)",
+                "attempts": attempt,
+            }
 
         # Validation EXPLAIN (D-01) — parse + résout sans scanner les données
         validation_error = _validate_sql(conn, sql)
