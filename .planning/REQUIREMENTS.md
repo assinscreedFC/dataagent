@@ -28,7 +28,7 @@ Corrections issues de la revue. Priorité : correctness boucle agent > sécurit�
 ### Performance (HIGH)
 
 - [x] **HARD-09**: Schema DuckDB introspecté **une seule fois** par run (stocké dans le state) au lieu d'un appel par invocation de node
-- [ ] **HARD-10**: Factories `flash_llm()`/`pro_llm()` retournent des singletons module-level (plus de ré-instanciation ~30×/run)
+- [x] **HARD-10**: Factories `flash_llm()`/`pro_llm()` retournent des singletons module-level (plus de ré-instanciation ~30×/run)
 - [x] **HARD-11**: API FastAPI ouvre **une** connexion DuckDB persistante au démarrage (`lifespan`) au lieu de recharger les 9 CSV à chaque requête `/ask`
 
 ### Tests (MEDIUM)
@@ -57,7 +57,7 @@ Corrections issues de la revue. Priorité : correctness boucle agent > sécurit�
 | HARD-07 | Phase 7 | Complete |
 | HARD-08 | Phase 7 | Complete |
 | HARD-09 | Phase 7 | Complete |
-| HARD-10 | Phase 7 | Pending |
+| HARD-10 | Phase 7 | Complete |
 | HARD-11 | Phase 7 | Complete |
 | HARD-12 | Phase 7 | Pending |
 

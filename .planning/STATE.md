@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: — Hardening
 status: executing
-stopped_at: Completed 07-hardening-bug-fixes/07-02-PLAN.md
-last_updated: "2026-06-13T18:21:54.943Z"
+stopped_at: Completed 07-hardening-bug-fixes/07-03-PLAN.md
+last_updated: "2026-06-13T18:27:35.218Z"
 last_activity: 2026-06-13
 progress:
   total_phases: 1
   completed_phases: 0
   total_plans: 4
-  completed_plans: 2
-  percent: 50
+  completed_plans: 3
+  percent: 75
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-06-13)
 ## Current Position
 
 Phase: 7 (Hardening & Bug Fixes) — EXECUTING
-Plan: 3 of 4
+Plan: 4 of 4
 Status: Ready to execute
 Last activity: 2026-06-13
 
@@ -71,6 +71,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 06-eval-api-demo P06-03 | 13 | 1 tasks | 2 files |
 | Phase 07-hardening-bug-fixes P07-01 | 12 | 3 tasks | 5 files |
 | Phase 07 P02 | 20 | 3 tasks | 9 files |
+| Phase 07-hardening-bug-fixes P03 | 5 | 1 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -113,6 +114,7 @@ Recent decisions affecting current work:
 - [Phase 07-02]: D-06: max_length=2000 on AskRequest; _filter_findings strips sql/rows/columns by default; ?debug=true opt-in (HARD-05)
 - [Phase 07-02]: D-07: html.escape(png_path, quote=True) in render.py before <img src> injection (HARD-06)
 - [Phase 07-02]: D-12: FastAPI lifespan creates one persistent DuckDB conn; ask() uses getattr fallback None for test compat (HARD-11)
+- [Phase 07-hardening-bug-fixes]: D-11: _flash/_pro lazy singletons in llm.py — one ChatGoogleGenerativeAI instance per process, monkeypatching preserved
 
 ### Pending Todos
 
@@ -124,6 +126,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-06-13T18:21:54.932Z
-Stopped at: Completed 07-hardening-bug-fixes/07-02-PLAN.md
+Last session: 2026-06-13T18:27:35.207Z
+Stopped at: Completed 07-hardening-bug-fixes/07-03-PLAN.md
 Resume file: None

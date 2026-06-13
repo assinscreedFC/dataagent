@@ -46,7 +46,7 @@ Détails complets : [`milestones/v1.0-ROADMAP.md`](milestones/v1.0-ROADMAP.md)
 Plans:
 - [x] 07-01-PLAN.md — Boucle agent core + perf schema : current_step borné (D-01), critic early-exit (D-02), critic contenu (D-03), _as_text (D-08), except bindés (D-09), schema 1×/run (D-10) [nodes/graph/state]
 - [x] 07-02-PLAN.md — Sécurité : write/DDL guard (D-04), validation nom de table loader (D-05), /ask durci + lifespan conn persistante (D-06/D-12), html.escape (D-07)
-- [ ] 07-03-PLAN.md — Perf : singletons flash_llm/pro_llm (D-11) [llm.py]
+- [x] 07-03-PLAN.md — Perf : singletons flash_llm/pro_llm (D-11) [llm.py]
 - [ ] 07-04-PLAN.md — Tests : blind spots CLI/exec-failure/except/planner-empty/write-guard/current_step/critic-content + MAJ terminaison D-01/D-02, ≥85% couverture (D-13)
 
 ## Progress
@@ -61,7 +61,7 @@ Plans:
 | 4. Router & Critic Loop | v1.0 | 2/2 | Complete | 2026-06-13 |
 | 5. Resumability | v1.0 | 1/1 | Complete | 2026-06-13 |
 | 6. Eval, API & Demo | v1.0 | 3/3 | Complete | 2026-06-13 |
-| 7. Hardening & Bug Fixes | v1.1 | 2/4 | In Progress|  |
+| 7. Hardening & Bug Fixes | v1.1 | 3/4 | In Progress|  |
 
 ---
 *Milestone v1.0 shipped 2026-06-13 — 6 phases, 12 plans, 163 tests.*
