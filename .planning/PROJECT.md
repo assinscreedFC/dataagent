@@ -30,6 +30,7 @@ Une question business en langage naturel produit un rapport correct, sourcé et 
 - ✓ Eval : 10 questions test, correctness mesurée (harness) — v1.0 Phase 6
 - ✓ FastAPI endpoint `POST /ask` + `GET /health` — v1.0 Phase 6
 - ✓ Rapport rendu HTML (rebrand SolidScale, images embarquées) — v1.0 Phase 6
+- ✓ Hardening (review code) : current_step borné + critic content-aware, garde SQL write/DDL + validation table, /ask durci + html.escape, _as_text + except tracés, schema 1×/run + LLM singletons + API lifespan, cov 94% — v1.1 Phase 7
 
 ### Active
 

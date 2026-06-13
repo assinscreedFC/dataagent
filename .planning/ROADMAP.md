@@ -3,7 +3,7 @@
 ## Milestones
 
 - ✅ **v1.0 — Agent LangGraph complet (J2-J4)** — Phases 1-6 (shipped 2026-06-13) — voir [`milestones/v1.0-ROADMAP.md`](milestones/v1.0-ROADMAP.md)
-- 🚧 **v1.1 — Hardening** — Phase 7 (corrections code review post-v1.0)
+- ✅ **v1.1 — Hardening** — Phase 7 (shipped 2026-06-13) — voir [`milestones/v1.1-ROADMAP.md`](milestones/v1.1-ROADMAP.md)
 
 ## Phases
 
@@ -21,33 +21,15 @@ Détails complets : [`milestones/v1.0-ROADMAP.md`](milestones/v1.0-ROADMAP.md)
 
 </details>
 
-### 🚧 v1.1 — Hardening
+<details>
+<summary>✅ v1.1 — Hardening (Phase 7) — SHIPPED 2026-06-13</summary>
 
-- [x] **Phase 7: Hardening & Bug Fixes** - Corrige les findings critiques de la revue : boucle agent (current_step/critic), sécurité SQL, qualité/perf, tests (completed 2026-06-13)
+- [x] Phase 7: Hardening & Bug Fixes (4/4 plans) — 2026-06-13
+  - Corrections code review multi-agents : current_step borné + critic content (boucle agent), garde SQL write/DDL + validation table + /ask durci + html.escape (sécurité), _as_text + except bindés (robustesse), schema 1×/run + LLM singletons + API lifespan (perf), blind spots tests (cov 94%, 248 tests).
 
-## Phase Details
+Détails complets : [`milestones/v1.1-ROADMAP.md`](milestones/v1.1-ROADMAP.md)
 
-### Phase 7: Hardening & Bug Fixes
-**Goal**: Corriger les bugs critiques et durcir le code identifiés par la revue multi-agents post-v1.0, sans changer le comportement nominal de l'agent.
-**Depends on**: v1.0 (Phases 1-6 shipped)
-**Requirements**: HARD-01, HARD-02, HARD-03, HARD-04, HARD-05, HARD-06, HARD-07, HARD-08, HARD-09, HARD-10, HARD-11, HARD-12
-**Success Criteria** (what must be TRUE):
-  1. `current_step` ne dépasse jamais `len(plan)-1` ; une question multi-étapes ne re-run plus la même sous-question jusqu'à max_iterations (test dédié)
-  2. Le critic reçoit le contenu des findings et peut décider de synthétiser avant max_iterations
-  3. Un SQL contenant DROP/DELETE/COPY/etc. est rejeté avant exécution (test dédié)
-  4. Un nom de table CSV non conforme est rejeté/sanitizé dans loader
-  5. `/ask` borne la longueur de question et n'expose pas les findings bruts par défaut ; render échappe le HTML
-  6. mypy ne signale plus d'erreur sur `response.content` ; les except bindent et loggent
-  7. schema introspecté une fois/run, LLM singletons, API conn persistante (lifespan)
-  8. Couverture ≥85% global, blind spots couverts (__main__, échec exec SQL, gardes except)
-  9. La suite de tests passe (aucune régression sur les 163 tests existants)
-**Plans**: 4 plans (3 waves)
-
-Plans:
-- [x] 07-01-PLAN.md — Boucle agent core + perf schema : current_step borné (D-01), critic early-exit (D-02), critic contenu (D-03), _as_text (D-08), except bindés (D-09), schema 1×/run (D-10) [nodes/graph/state]
-- [x] 07-02-PLAN.md — Sécurité : write/DDL guard (D-04), validation nom de table loader (D-05), /ask durci + lifespan conn persistante (D-06/D-12), html.escape (D-07)
-- [x] 07-03-PLAN.md — Perf : singletons flash_llm/pro_llm (D-11) [llm.py]
-- [x] 07-04-PLAN.md — Tests : blind spots CLI/exec-failure/except/planner-empty/write-guard/current_step/critic-content + MAJ terminaison D-01/D-02, ≥85% couverture (D-13)
+</details>
 
 ## Progress
 
@@ -65,4 +47,5 @@ Plans:
 
 ---
 *Milestone v1.0 shipped 2026-06-13 — 6 phases, 12 plans, 163 tests.*
-*v1.1 Hardening in progress — Phase 7 (12 requirements from code review, 4 plans / 3 waves).*
+*Milestone v1.1 Hardening shipped 2026-06-13 — Phase 7, 4 plans, 12 reqs, 248 tests, cov 94%.*
+*Next milestone: `/gsd-new-milestone`*
