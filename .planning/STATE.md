@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Completed 04-router-critic-loop/04-01-PLAN.md
-last_updated: "2026-06-13T14:02:36.279Z"
+status: verifying
+stopped_at: Completed 04-router-critic-loop/04-02-PLAN.md
+last_updated: "2026-06-13T14:31:04.231Z"
 last_activity: 2026-06-13
 progress:
   total_phases: 6
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 8
-  completed_plans: 7
-  percent: 88
+  completed_plans: 8
+  percent: 100
 ---
 
 # Project State
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-06-13)
 
 Phase: 4 (Router & Critic Loop) — EXECUTING
 Plan: 2 of 2
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-06-13
 
 Progress: [░░░░░░░░░░] 0%
@@ -61,6 +61,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 03-stats-viz-tools P03-01 | 10 | 3 tasks | 4 files |
 | Phase 03-stats-viz-tools P03-02 | 17 | 3 tasks | 3 files |
 | Phase 04-router-critic-loop P01 | 966 | 3 tasks | 4 files |
+| Phase 04-router-critic-loop P02 | 1200 | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -86,6 +87,7 @@ Recent decisions affecting current work:
 - [Phase 03-stats-viz-tools]: render_chart uses slugify (re.sub [^a-z0-9]+) for path-safe deterministic PNG filenames
 - [Phase 03-stats-viz-tools]: viz_tool_node renders only first chartable sql_tool finding per call; does not increment iterations
 - [Phase 04-router-critic-loop]: route_subquestion uses keyword heuristic (deterministic) with index guard; critic_node exposes sufficient:bool via last finding source=critic for Plan 02 path_map
+- [Phase 04-router-critic-loop]: _router_node pass-through + add_conditional_edges path_map; _critic_decision hard cap applicatif (iterations>=max avant GraphRecursionError); sql_tool_node traite uniquement current_step
 
 ### Pending Todos
 
@@ -97,6 +99,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-06-13T14:02:36.259Z
-Stopped at: Completed 04-router-critic-loop/04-01-PLAN.md
+Last session: 2026-06-13T14:31:04.219Z
+Stopped at: Completed 04-router-critic-loop/04-02-PLAN.md
 Resume file: None
