@@ -15,7 +15,11 @@ from dataagent.config import MAX_ITERATIONS
 
 
 class AgentState(TypedDict):
-    """State de l'agent : 8 champs, conforme PLAN.md §State schema."""
+    """State de l'agent : 9 champs, conforme PLAN.md §State schema + current_step (Phase 4).
+
+    current_step = index de la sous-question courante dans plan[],
+    avancé par le critic à chaque tour de boucle.
+    """
 
     question: str
     plan: list[str]
@@ -23,6 +27,7 @@ class AgentState(TypedDict):
     messages: Annotated[list, add_messages]
     iterations: int
     max_iterations: int
+    current_step: int
     db: Annotated[DuckDBPyConnection, UntrackedValue(DuckDBPyConnection)]
     report: str
 
@@ -44,6 +49,7 @@ def initial_state(question: str, db: DuckDBPyConnection) -> AgentState:
         messages=[],
         iterations=0,
         max_iterations=MAX_ITERATIONS,
+        current_step=0,
         db=db,
         report="",
     )

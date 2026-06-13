@@ -19,13 +19,14 @@ _EXPECTED_FIELDS = {
     "messages",
     "iterations",
     "max_iterations",
+    "current_step",
     "db",
     "report",
 }
 
 
-def test_agent_state_has_exactly_8_fields() -> None:
-    """AgentState porte exactement les 8 champs définis en D-01."""
+def test_agent_state_has_exactly_9_fields() -> None:
+    """AgentState porte exactement les 9 champs définis en D-01 + current_step (Phase 4)."""
     assert set(AgentState.__annotations__) == _EXPECTED_FIELDS
 
 
@@ -66,4 +67,5 @@ def test_initial_state_defaults(conn) -> None:
     assert state["iterations"] == 0
     assert state["max_iterations"] == MAX_ITERATIONS
     assert state["max_iterations"] == 5
+    assert state["current_step"] == 0
     assert state["report"] == ""
