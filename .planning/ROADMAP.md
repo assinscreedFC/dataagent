@@ -13,7 +13,7 @@ La couche data J1 (DuckDB + 5 queries Polars) est déjà livrée et testée. Ce 
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: State Foundation & Minimal Graph** - State schema + boucle planner→sql_tool→synthesizer end-to-end (J2) ✓ 2026-06-13
-- [ ] **Phase 2: SQL Tool Hardening** - sql_tool valide la query sur le schema DuckDB et retry sur erreur
+- [x] **Phase 2: SQL Tool Hardening** - sql_tool valide la query sur le schema DuckDB et retry sur erreur (completed 2026-06-13)
 - [ ] **Phase 3: Stats & Viz Tools** - stats_tool (corrélation/anomalies) + viz_tool (PNG plotly), parallélisables
 - [ ] **Phase 4: Router & Critic Loop** - Router type-hinté + critic loop avec hard cap, rapport multi-source (J3)
 - [ ] **Phase 5: Resumability** - Checkpointer SqliteSaver pour runs resumables
@@ -46,7 +46,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Le résultat d'une query valide est poussé dans `findings` avec sa source
   4. Une question dont le SQL initial échoue finit quand même par produire un finding correct
 **Plans**: 1 plan
-  - [ ] 02-01-PLAN.md — Validation EXPLAIN pré-exec + boucle retry bornée (SQL_MAX_RETRIES) + finding enrichi/erreur + tests
+  - [x] 02-01-PLAN.md — Validation EXPLAIN pré-exec + boucle retry bornée (SQL_MAX_RETRIES) + finding enrichi/erreur + tests
 
 ### Phase 3: Stats & Viz Tools
 **Goal**: L'agent dispose de deux nouveaux tools — analyse statistique (Polars) et visualisation (plotly) — qui enrichissent les findings.
@@ -101,7 +101,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. State Foundation & Minimal Graph | 3/3 | Complete | 2026-06-13 |
-| 2. SQL Tool Hardening | 0/1 | Not started | - |
+| 2. SQL Tool Hardening | 1/1 | Complete   | 2026-06-13 |
 | 3. Stats & Viz Tools | 0/TBD | Not started | - |
 | 4. Router & Critic Loop | 0/TBD | Not started | - |
 | 5. Resumability | 0/TBD | Not started | - |

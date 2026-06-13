@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: verifying
-stopped_at: Completed 01-state-foundation-minimal-graph/01-03-PLAN.md
-last_updated: "2026-06-13T12:22:24.751Z"
+stopped_at: Completed 02-sql-tool-hardening/02-01-PLAN.md
+last_updated: "2026-06-13T12:41:47.147Z"
 last_activity: 2026-06-13
 progress:
-  total_phases: 1
-  completed_phases: 1
-  total_plans: 3
-  completed_plans: 3
+  total_phases: 6
+  completed_phases: 2
+  total_plans: 4
+  completed_plans: 4
   percent: 100
 ---
 
@@ -21,12 +21,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-13)
 
 **Core value:** Une question business en langage naturel produit un rapport correct, sourcé et visualisé — sans intervention humaine dans la boucle d'analyse.
-**Current focus:** Phase 1 — State Foundation & Minimal Graph
+**Current focus:** Phase 2 — SQL Tool Hardening
 
 ## Current Position
 
-Phase: 01
-Plan: Not started
+Phase: 2 (SQL Tool Hardening) — EXECUTING
+Plan: 1 of 1
 Status: Phase complete — ready for verification
 Last activity: 2026-06-13
 
@@ -55,6 +55,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 01-state-foundation-minimal-graph P01-01 | 19 | 3 tasks | 5 files |
 | Phase 01-state-foundation-minimal-graph P01-02 | 7 | 3 tasks | 3 files |
 | Phase 01-state-foundation-minimal-graph P01-03 | 6 | 3 tasks | 3 files |
+| Phase 02-sql-tool-hardening P02-01 | 10 | 3 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -73,6 +74,8 @@ Recent decisions affecting current work:
 - [Phase 01-state-foundation-minimal-graph]: _extract_tables uses regex cross-check against schema string (no SQL AST parser, YAGNI)
 - [Phase 01-state-foundation-minimal-graph]: run(conn=None) injectable pour tests, crée connexion réelle pour CLI (pattern à conserver)
 - [Phase 01-state-foundation-minimal-graph]: load_dotenv() avant imports dataagent dans __main__.py — import différé de run() dans main()
+- [Phase 02-sql-tool-hardening]: EXPLAIN used for pre-execution SQL validation (D-01/D-02) — more robust than manual information_schema check
+- [Phase 02-sql-tool-hardening]: SQL_MAX_RETRIES=2 in config.py, distinct from MAX_ITERATIONS (D-03) — intra-tool retry guard
 
 ### Pending Todos
 
@@ -84,6 +87,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-06-13T12:05:18.071Z
-Stopped at: Completed 01-state-foundation-minimal-graph/01-03-PLAN.md
+Last session: 2026-06-13T12:41:47.137Z
+Stopped at: Completed 02-sql-tool-hardening/02-01-PLAN.md
 Resume file: None
