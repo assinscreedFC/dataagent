@@ -11,8 +11,8 @@ Requirements pour l'agent complet (jalons J2→J4). J1 data layer déjà validé
 
 - [x] **GRAPH-01**: Le state `AgentState` (TypedDict) porte question, plan, findings (reducer `add`), messages, iterations, max_iterations, db (`UntrackedValue`), report
 - [ ] **GRAPH-02**: Un `StateGraph` compilé câble planner → sql_tool → synthesizer end-to-end
-- [ ] **GRAPH-03**: Le node planner (Gemini Flash) décompose la question en sous-questions `plan[]`
-- [ ] **GRAPH-04**: Le node synthesizer (Gemini Pro) produit un rapport markdown sourcé
+- [x] **GRAPH-03**: Le node planner (Gemini Flash) décompose la question en sous-questions `plan[]`
+- [x] **GRAPH-04**: Le node synthesizer (Gemini Pro) produit un rapport markdown sourcé
 - [x] **GRAPH-05**: `max_iterations` est câblé dans le state dès J2 comme hard stop
 - [ ] **GRAPH-06**: `python -m dataagent "CA total 2017 ?"` retourne une réponse correcte
 
@@ -52,8 +52,8 @@ Requirements pour l'agent complet (jalons J2→J4). J1 data layer déjà validé
 |-------------|-------|--------|
 | GRAPH-01 | Phase 1 | Complete |
 | GRAPH-02 | Phase 1 | Pending |
-| GRAPH-03 | Phase 1 | Pending |
-| GRAPH-04 | Phase 1 | Pending |
+| GRAPH-03 | Phase 1 | Complete |
+| GRAPH-04 | Phase 1 | Complete |
 | GRAPH-05 | Phase 1 | Complete |
 | GRAPH-06 | Phase 1 | Pending |
 | TOOL-01 | Phase 2 | Pending |

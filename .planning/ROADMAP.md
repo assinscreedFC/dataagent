@@ -7,5 +7,5 @@
   5. Le planner décompose la question en sous-questions `plan[]` visibles dans le state
 **Plans**: 3 plans
   - [x] 01-01-PLAN.md — Fondations : config Gemini + AgentState (8 champs, db UntrackedValue) + factory LLM
-  - [ ] 01-02-PLAN.md — Nodes : planner (Flash) + sql_tool minimal + synthesizer (Pro) + introspection schema
+  - [x] 01-02-PLAN.md — Nodes : planner (Flash) + sql_tool minimal + synthesizer (Pro) + introspection schema
   - [ ] 01-03-PLAN.md — Graph compilé linéaire + CLI `python -m dataagent` + test end-to-end
