@@ -5,6 +5,7 @@ Fournit deux fonctions pures sans LLM ni réseau :
 - render_report_to_file : écrit le HTML dans reports/<name>.html
 """
 
+import html
 from pathlib import Path
 
 import markdown
@@ -193,9 +194,11 @@ def render_html(
         for finding in findings:
             png_path = finding.get("png_path")
             if png_path and png_path not in safe_md:
+                safe_src = html.escape(png_path, quote=True)
+                safe_alt = html.escape("graphe", quote=True)
                 body += (
                     f'\n<div class="viz-section">'
-                    f'<img src="{png_path}" alt="graphe">'
+                    f'<img src="{safe_src}" alt="{safe_alt}">'
                     f"</div>"
                 )
 

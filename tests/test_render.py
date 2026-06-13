@@ -134,3 +134,41 @@ def test_render_report_to_file_returns_path(tmp_path, monkeypatch):
 
     result = render_report_to_file("# Test", name="path_type")
     assert isinstance(result, Path)
+
+
+# ---------------------------------------------------------------------------
+# Tests html.escape — HARD-06 (D-07, plan 07-02 Task 2)
+# ---------------------------------------------------------------------------
+
+
+def test_render_html_escapes_xss_in_png_path():
+    """png_path avec payload XSS est échappé dans l'attribut src (D-07, HARD-06)."""
+    malicious_png = 'x"><script>alert(1)</script>'
+    findings = [{"source": "viz_tool", "png_path": malicious_png}]
+    result = render_html("# Rapport", findings=findings)
+
+    # La balise <script> ne doit pas apparaître non échappée dans le HTML
+    assert "<script>" not in result
+    # Le payload doit être présent mais échappé
+    assert "&lt;script&gt;" in result or "alert" not in result
+
+
+def test_render_html_escapes_quotes_in_png_path():
+    """png_path avec guillemets est échappé pour ne pas casser l'attribut src."""
+    quoted_png = 'reports/chart" onload="alert(1)'
+    findings = [{"source": "viz_tool", "png_path": quoted_png}]
+    result = render_html("# Rapport", findings=findings)
+
+    # Le guillemet non échappé ne doit pas briser l'attribut
+    assert 'src="reports/chart" onload=' not in result
+    # La valeur doit être échappée
+    assert "&quot;" in result or "&#" in result or "onload" not in result
+
+
+def test_render_html_normal_png_path_unchanged():
+    """Un png_path normal reste intact après html.escape."""
+    normal_png = "reports/chart_sales_2017.png"
+    findings = [{"source": "viz_tool", "png_path": normal_png}]
+    result = render_html("# Rapport", findings=findings)
+
+    assert f'src="{normal_png}"' in result
