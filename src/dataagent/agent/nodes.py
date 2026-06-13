@@ -14,6 +14,7 @@ import duckdb
 from dataagent.agent.llm import flash_llm, pro_llm
 from dataagent.agent.schema_introspect import schema_description
 from dataagent.agent.state import AgentState
+from dataagent.config import SQL_MAX_RETRIES
 
 logger = logging.getLogger(__name__)
 
@@ -52,6 +53,36 @@ def planner_node(state: AgentState) -> dict:
 # ---------------------------------------------------------------------------
 
 _SQL_FENCE_RE = re.compile(r"```(?:sql)?\s*\n?(.*?)\n?```", re.DOTALL | re.IGNORECASE)
+
+
+def _validate_sql(conn: duckdb.DuckDBPyConnection, sql: str) -> str | None:
+    """Valide la query SQL via EXPLAIN sans scanner les données.
+
+    EXPLAIN parse + résout tables/colonnes contre le catalogue DuckDB.
+    Une référence à une table/colonne inexistante lève une exception DuckDB
+    (CatalogException/BinderException) capturée comme échec de validation.
+
+    NB sécurité : sql est généré par le LLM à partir du schema (pas d'input
+    utilisateur direct concaténé) ; EXPLAIN ne mute ni ne scanne les données.
+    Ne pas paramétrer : EXPLAIN ne supporte pas les placeholders sur le corps.
+
+    Args:
+        conn: Connexion DuckDB active.
+        sql: Requête SQL à valider.
+
+    Returns:
+        None si la query est valide, str(exc) si invalide.
+    """
+    try:
+        conn.execute("EXPLAIN " + sql)
+        return None
+    except (duckdb.Error, Exception) as exc:  # noqa: BLE001
+        logger.warning(
+            "_validate_sql: EXPLAIN failed — sql=%r error=%s",
+            sql,
+            exc,
+        )
+        return str(exc)
 
 
 def _clean_sql(raw_sql: str) -> str:
