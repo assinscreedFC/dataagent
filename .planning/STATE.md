@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 06-eval-api-demo/06-01-PLAN.md
-last_updated: "2026-06-13T15:45:50.831Z"
+stopped_at: Completed 06-eval-api-demo/06-02-PLAN.md
+last_updated: "2026-06-13T15:56:53.341Z"
 last_activity: 2026-06-13
 progress:
   total_phases: 6
   completed_phases: 5
   total_plans: 12
-  completed_plans: 10
-  percent: 83
+  completed_plans: 11
+  percent: 92
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-06-13)
 ## Current Position
 
 Phase: 6 (Eval, API & Demo) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Status: Ready to execute
 Last activity: 2026-06-13
 
@@ -66,6 +66,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 04-router-critic-loop P02 | 1200 | 3 tasks | 5 files |
 | Phase 05-resumability P01 | 40 | 3 tasks | 3 files |
 | Phase 06 P01 | 751 | 2 tasks | 4 files |
+| Phase 06 P06-02 | 12 | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -97,6 +98,7 @@ Recent decisions affecting current work:
 - [Phase 05-resumability]: run(thread_id) passes initial_state() to invoke() with FilteredSqliteSaver filtering db — conn fresh per run (D-05)
 - [Phase 06]: score_report retourne 0.0 sur liste vide — sémantique zéro critères => zéro score
 - [Phase 06]: run_fn injectable en paramètre de run_eval (default=graph.run) — tests sans quota Gemini (D-03)
+- [Phase 06]: AskRequest min_length=1 rejects empty question at Pydantic layer (T-06-01); run() imported at module top for monkeypatch (D-05); sync handlers in FastAPI threadpool for blocking run() (D-04)
 
 ### Pending Todos
 
@@ -108,6 +110,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-06-13T15:45:50.816Z
-Stopped at: Completed 06-eval-api-demo/06-01-PLAN.md
+Last session: 2026-06-13T15:56:53.325Z
+Stopped at: Completed 06-eval-api-demo/06-02-PLAN.md
 Resume file: None
