@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: verifying
-stopped_at: Completed 03-stats-viz-tools/03-02-PLAN.md
-last_updated: "2026-06-13T13:38:31.052Z"
+status: executing
+stopped_at: Completed 04-router-critic-loop/04-01-PLAN.md
+last_updated: "2026-06-13T14:02:36.279Z"
 last_activity: 2026-06-13
 progress:
   total_phases: 6
   completed_phases: 3
-  total_plans: 6
-  completed_plans: 6
-  percent: 100
+  total_plans: 8
+  completed_plans: 7
+  percent: 88
 ---
 
 # Project State
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-13)
 
 **Core value:** Une question business en langage naturel produit un rapport correct, sourcé et visualisé — sans intervention humaine dans la boucle d'analyse.
-**Current focus:** Phase 3 — Stats & Viz Tools
+**Current focus:** Phase 4 — Router & Critic Loop
 
 ## Current Position
 
-Phase: 4
-Plan: Not started
-Status: Phase complete — ready for verification
+Phase: 4 (Router & Critic Loop) — EXECUTING
+Plan: 2 of 2
+Status: Ready to execute
 Last activity: 2026-06-13
 
 Progress: [░░░░░░░░░░] 0%
@@ -60,6 +60,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 02-sql-tool-hardening P02-01 | 10 | 3 tasks | 3 files |
 | Phase 03-stats-viz-tools P03-01 | 10 | 3 tasks | 4 files |
 | Phase 03-stats-viz-tools P03-02 | 17 | 3 tasks | 3 files |
+| Phase 04-router-critic-loop P01 | 966 | 3 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -84,6 +85,7 @@ Recent decisions affecting current work:
 - [Phase 03-stats-viz-tools]: stats_tool_node does not increment iterations — router/critic owns that in Phase 4
 - [Phase 03-stats-viz-tools]: render_chart uses slugify (re.sub [^a-z0-9]+) for path-safe deterministic PNG filenames
 - [Phase 03-stats-viz-tools]: viz_tool_node renders only first chartable sql_tool finding per call; does not increment iterations
+- [Phase 04-router-critic-loop]: route_subquestion uses keyword heuristic (deterministic) with index guard; critic_node exposes sufficient:bool via last finding source=critic for Plan 02 path_map
 
 ### Pending Todos
 
@@ -95,6 +97,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-06-13T13:27:19.433Z
-Stopped at: Completed 03-stats-viz-tools/03-02-PLAN.md
+Last session: 2026-06-13T14:02:36.259Z
+Stopped at: Completed 04-router-critic-loop/04-01-PLAN.md
 Resume file: None

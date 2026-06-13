@@ -72,7 +72,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. La boucle s'arrête à `max_iterations` même si le critic n'est pas satisfait (pas de boucle infinie)
   4. Une question complexe produit un rapport markdown multi-source incluant un graphe
 **Plans**: 2 plans
-  - [ ] 04-01-PLAN.md — State current_step + route_subquestion (Literal) + critic_node (increment) + synthesizer multi-source
+  - [x] 04-01-PLAN.md — State current_step + route_subquestion (Literal) + critic_node (increment) + synthesizer multi-source
   - [ ] 04-02-PLAN.md — Graphe branché (add_conditional_edges + path_map router & critic) + tests boucle/HARD CAP/multi-source
 
 ### Phase 5: Resumability
@@ -107,7 +107,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 1. State Foundation & Minimal Graph | 3/3 | Complete | 2026-06-13 |
 | 2. SQL Tool Hardening | 1/1 | Complete   | 2026-06-13 |
 | 3. Stats & Viz Tools | 2/2 | Complete   | 2026-06-13 |
-| 4. Router & Critic Loop | 0/2 | Not started | - |
+| 4. Router & Critic Loop | 1/2 | In Progress|  |
 | 5. Resumability | 0/TBD | Not started | - |
 | 6. Eval, API & Demo | 0/TBD | Not started | - |
 
