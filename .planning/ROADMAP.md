@@ -58,7 +58,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. viz_tool produit un fichier PNG plotly sur disque
   4. Le chemin du PNG généré est enregistré dans findings
 **Plans**: 2 plans
-  - [ ] 03-01-PLAN.md — stats_tool : corrélation Pearson + détection anomalies z-score (Polars) + stats_tool_node
+  - [x] 03-01-PLAN.md — stats_tool : corrélation Pearson + détection anomalies z-score (Polars) + stats_tool_node
   - [ ] 03-02-PLAN.md — viz_tool : figure plotly -> PNG déterministe (kaleido) dans reports/ + viz_tool_node, png_path dans findings
 **UI hint**: yes
 
@@ -104,7 +104,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 |-------|----------------|--------|-----------|
 | 1. State Foundation & Minimal Graph | 3/3 | Complete | 2026-06-13 |
 | 2. SQL Tool Hardening | 1/1 | Complete   | 2026-06-13 |
-| 3. Stats & Viz Tools | 0/2 | Not started | - |
+| 3. Stats & Viz Tools | 1/2 | In Progress|  |
 | 4. Router & Critic Loop | 0/TBD | Not started | - |
 | 5. Resumability | 0/TBD | Not started | - |
 | 6. Eval, API & Demo | 0/TBD | Not started | - |
