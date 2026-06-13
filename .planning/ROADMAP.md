@@ -17,7 +17,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 3: Stats & Viz Tools** - stats_tool (corrélation/anomalies) + viz_tool (PNG plotly), parallélisables (completed 2026-06-13)
 - [x] **Phase 4: Router & Critic Loop** - Router type-hinté + critic loop avec hard cap, rapport multi-source (J3) (completed 2026-06-13)
 - [x] **Phase 5: Resumability** - Checkpointer SqliteSaver pour runs resumables (completed 2026-06-13)
-- [ ] **Phase 6: Eval, API & Demo** - Eval 10 Q/R, endpoint FastAPI `/ask`, rapport HTML + screenshots Labs (J4)
+- [x] **Phase 6: Eval, API & Demo** - Eval 10 Q/R, endpoint FastAPI `/ask`, rapport HTML + screenshots Labs (J4) (completed 2026-06-13)
 
 ## Phase Details
 
@@ -98,7 +98,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 3 plans
   - [x] 06-01-PLAN.md — Eval harness : dataset 10 Q/R Olist + runner score correctness (keyword-ratio), testé LLM mocké (live run = human-verify)
   - [x] 06-02-PLAN.md — API FastAPI : POST /ask (run → report+findings) + GET /health, testé TestClient agent mocké
-  - [ ] 06-03-PLAN.md — Renderer : markdown → HTML standalone SolidScale + images viz embarquées (reports/*.html), screenshots = human-verify
+  - [x] 06-03-PLAN.md — Renderer : markdown → HTML standalone SolidScale + images viz embarquées (reports/*.html), screenshots = human-verify
 **UI hint**: yes
 
 ## Progress
@@ -113,7 +113,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 3. Stats & Viz Tools | 2/2 | Complete   | 2026-06-13 |
 | 4. Router & Critic Loop | 2/2 | Complete   | 2026-06-13 |
 | 5. Resumability | 1/1 | Complete   | 2026-06-13 |
-| 6. Eval, API & Demo | 2/3 | In Progress|  |
+| 6. Eval, API & Demo | 3/3 | Complete   | 2026-06-13 |
 
 ---
 *Roadmap created: 2026-06-13*

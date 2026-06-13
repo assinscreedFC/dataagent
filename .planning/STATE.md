@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Completed 06-eval-api-demo/06-02-PLAN.md
-last_updated: "2026-06-13T15:56:53.341Z"
+status: verifying
+stopped_at: Completed 06-eval-api-demo/06-03-PLAN.md
+last_updated: "2026-06-13T16:11:49.009Z"
 last_activity: 2026-06-13
 progress:
   total_phases: 6
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 12
-  completed_plans: 11
-  percent: 92
+  completed_plans: 12
+  percent: 100
 ---
 
 # Project State
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-06-13)
 
 Phase: 6 (Eval, API & Demo) — EXECUTING
 Plan: 3 of 3
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-06-13
 
 Progress: [░░░░░░░░░░] 0%
@@ -67,6 +67,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 05-resumability P01 | 40 | 3 tasks | 3 files |
 | Phase 06 P01 | 751 | 2 tasks | 4 files |
 | Phase 06 P06-02 | 12 | 2 tasks | 2 files |
+| Phase 06-eval-api-demo P06-03 | 13 | 1 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -99,6 +100,8 @@ Recent decisions affecting current work:
 - [Phase 06]: score_report retourne 0.0 sur liste vide — sémantique zéro critères => zéro score
 - [Phase 06]: run_fn injectable en paramètre de run_eval (default=graph.run) — tests sans quota Gemini (D-03)
 - [Phase 06]: AskRequest min_length=1 rejects empty question at Pydantic layer (T-06-01); run() imported at module top for monkeypatch (D-05); sync handlers in FastAPI threadpool for blocking run() (D-04)
+- [Phase 06-eval-api-demo]: render_html injects extra img only when png_path absent from markdown (synthesizer may already embed it)
+- [Phase 06-eval-api-demo]: CSS inlined in head — standalone HTML, no external assets required
 
 ### Pending Todos
 
@@ -110,6 +113,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-06-13T15:56:53.325Z
-Stopped at: Completed 06-eval-api-demo/06-02-PLAN.md
+Last session: 2026-06-13T16:11:48.996Z
+Stopped at: Completed 06-eval-api-demo/06-03-PLAN.md
 Resume file: None
