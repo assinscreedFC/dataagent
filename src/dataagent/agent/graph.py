@@ -7,7 +7,7 @@ TOOL-06 (arrêt hard cap), TOOL-07 (resumabilité via checkpointer SqliteSaver),
 """
 
 import sqlite3
-from typing import Literal
+from typing import Any, Literal
 
 from langgraph.checkpoint.sqlite import SqliteSaver
 from langgraph.graph import END, START, StateGraph
@@ -24,6 +24,51 @@ from dataagent.agent.nodes import (
 from dataagent.agent.state import AgentState, initial_state
 from dataagent.config import CHECKPOINT_DB, DATA_RAW
 from dataagent.data.loader import connect, load_csvs_to_duckdb
+
+
+# ---------------------------------------------------------------------------
+# Checkpointer avec filtrage UntrackedValue
+# ---------------------------------------------------------------------------
+
+
+class _FilteredSqliteSaver(SqliteSaver):
+    """SqliteSaver qui exclut les champs UntrackedValue de la sérialisation __start__.
+
+    DuckDBPyConnection n'est pas msgpack-sérialisable. L'annotation `UntrackedValue`
+    empêche le channel db d'être persisté dans les checkpoints de nœud, mais le
+    channel __start__ (l'input initial de invoke()) est aussi sérialisé et inclut db.
+    Ce wrapper filtre db du channel_values['__start__'] avant la persistence, ce qui
+    permet d'inclure db dans l'input de invoke() sans erreur de sérialisation.
+
+    [Rule 1 — Bug] : UntrackedValue + SqliteSaver — db dans __start__ non filtré.
+    """
+
+    # Clés UntrackedValue à exclure du channel __start__ avant sérialisation
+    _UNTRACKED_KEYS: frozenset[str] = frozenset({"db"})
+
+    def put(
+        self,
+        config: Any,
+        checkpoint: Any,
+        metadata: Any,
+        new_versions: Any,
+    ) -> Any:
+        """Filtre les champs UntrackedValue du channel __start__ avant persistence."""
+        channel_values = checkpoint.get("channel_values", {})
+        if "__start__" in channel_values:
+            start_val = channel_values["__start__"]
+            if isinstance(start_val, dict) and any(
+                k in start_val for k in self._UNTRACKED_KEYS
+            ):
+                # Copier pour ne pas muter l'original
+                filtered_start = {
+                    k: v for k, v in start_val.items() if k not in self._UNTRACKED_KEYS
+                }
+                checkpoint = {
+                    **checkpoint,
+                    "channel_values": {**channel_values, "__start__": filtered_start},
+                }
+        return super().put(config, checkpoint, metadata, new_versions)
 
 
 # ---------------------------------------------------------------------------
@@ -182,21 +227,28 @@ def run(question: str, conn=None, thread_id: str | None = None) -> dict:
         conn = connect()
         load_csvs_to_duckdb(conn, DATA_RAW)
 
-    state = initial_state(question, conn)
-
     if thread_id is None:
         # Run éphémère : comportement Phase 4 intact (D-03)
+        state = initial_state(question, conn)
         app = build_graph()
         return app.invoke(state)
 
-    # Run persistant : checkpointer SqliteSaver sur CHECKPOINT_DB (TOOL-07, D-03/D-04)
+    # Run persistant : _FilteredSqliteSaver sur CHECKPOINT_DB (TOOL-07, D-03/D-04)
     # Connexion sqlite3 explicite (pas from_conn_string — context manager incompatible
     # avec un graphe persistant retourné).
+    #
+    # D-05 — UntrackedValue & sérialisation :
+    # DuckDBPyConnection n'est pas msgpack-sérialisable. _FilteredSqliteSaver filtre
+    # db du channel __start__ avant sérialisation, ce qui permet d'inclure db dans
+    # l'input de invoke() sans erreur. UntrackedValue garantit que db n'est pas
+    # restauré depuis le checkpoint — la conn fraîche fournie ici est utilisée à chaque
+    # run (premier run ou reprise), assurant la ré-injection D-05.
     saver_conn = sqlite3.connect(str(CHECKPOINT_DB), check_same_thread=False)
     try:
-        checkpointer = SqliteSaver(saver_conn)
+        checkpointer = _FilteredSqliteSaver(saver_conn)
         app = build_graph(checkpointer=checkpointer)
         config = {"configurable": {"thread_id": thread_id}}
+        state = initial_state(question, conn)
         return app.invoke(state, config=config)
     finally:
         saver_conn.close()
