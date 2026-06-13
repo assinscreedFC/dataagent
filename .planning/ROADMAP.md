@@ -14,7 +14,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: State Foundation & Minimal Graph** - State schema + boucle planner→sql_tool→synthesizer end-to-end (J2) ✓ 2026-06-13
 - [x] **Phase 2: SQL Tool Hardening** - sql_tool valide la query sur le schema DuckDB et retry sur erreur (completed 2026-06-13)
-- [x] **Phase 3: Stats & Viz Tools** - stats_tool (corrélation/anomalies) + viz_tool (PNG plotly), parallélisables (completed 2026-06-13)
+- [x] **Phase 3: Stats & Viz Tools** - stats_tool (corrélation/anomalies) + viz_tool (PNG plotly), parallélisables (completed 2026-06-13)
 - [ ] **Phase 4: Router & Critic Loop** - Router type-hinté + critic loop avec hard cap, rapport multi-source (J3)
 - [ ] **Phase 5: Resumability** - Checkpointer SqliteSaver pour runs resumables
 - [ ] **Phase 6: Eval, API & Demo** - Eval 10 Q/R, endpoint FastAPI `/ask`, rapport HTML + screenshots Labs (J4)
@@ -71,7 +71,9 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. Le critic juge les findings, reboucle si insuffisants et incrémente `iterations`
   3. La boucle s'arrête à `max_iterations` même si le critic n'est pas satisfait (pas de boucle infinie)
   4. Une question complexe produit un rapport markdown multi-source incluant un graphe
-**Plans**: TBD
+**Plans**: 2 plans
+  - [ ] 04-01-PLAN.md — State current_step + route_subquestion (Literal) + critic_node (increment) + synthesizer multi-source
+  - [ ] 04-02-PLAN.md — Graphe branché (add_conditional_edges + path_map router & critic) + tests boucle/HARD CAP/multi-source
 
 ### Phase 5: Resumability
 **Goal**: Un run interrompu peut reprendre là où il s'est arrêté grâce au checkpointer.
@@ -105,7 +107,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 1. State Foundation & Minimal Graph | 3/3 | Complete | 2026-06-13 |
 | 2. SQL Tool Hardening | 1/1 | Complete   | 2026-06-13 |
 | 3. Stats & Viz Tools | 2/2 | Complete   | 2026-06-13 |
-| 4. Router & Critic Loop | 0/TBD | Not started | - |
+| 4. Router & Critic Loop | 0/2 | Not started | - |
 | 5. Resumability | 0/TBD | Not started | - |
 | 6. Eval, API & Demo | 0/TBD | Not started | - |
 
