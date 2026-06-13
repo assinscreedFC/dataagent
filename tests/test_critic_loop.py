@@ -270,10 +270,17 @@ class TestHardCap:
         assert result == "synthesizer", f"Hard cap non déclenché: {result}"
 
     def test_critic_decision_reloop_when_insufficient(self):
-        """_critic_decision retourne 'router' si insuffisant ET sous le plafond."""
+        """_critic_decision retourne 'router' si insuffisant ET sous le plafond.
+
+        D-02 : l'early-exit vérifie current_step >= len(plan) AVANT le verdict critic.
+        Il faut fournir plan + current_step valides pour que le test prouve le reloop.
+        Ici plan=["Q1","Q2"], current_step=0 (< len=2) → pas d'early-exit → verdict critic.
+        """
         state = {
             "iterations": 2,
             "max_iterations": 5,
+            "plan": ["Q1 ?", "Q2 ?"],
+            "current_step": 0,
             "findings": [{"source": "critic", "sufficient": False, "iteration": 2}],
         }
         result = _critic_decision(state)
@@ -290,10 +297,18 @@ class TestHardCap:
         assert result == "synthesizer", f"Attendu synthesizer, got {result}"
 
     def test_critic_decision_no_findings_reloops(self):
-        """_critic_decision retourne 'router' si aucun finding critic (premier passage)."""
+        """_critic_decision retourne 'router' si aucun finding critic (premier passage).
+
+        D-02 : l'early-exit vérifie current_step >= len(plan) AVANT le verdict critic.
+        Il faut fournir plan + current_step valides pour que le test prouve le reloop.
+        Ici plan=["Q1"], current_step=0 (< len=1) → pas d'early-exit → pas de finding
+        critic → reboucle vers router.
+        """
         state = {
             "iterations": 0,
             "max_iterations": 5,
+            "plan": ["Q1 ?"],
+            "current_step": 0,
             "findings": [],
         }
         result = _critic_decision(state)

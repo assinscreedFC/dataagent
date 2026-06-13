@@ -228,11 +228,17 @@ class TestCriticNode:
         assert result["current_step"] == 1
 
     def test_current_step_increments_from_nonzero(self, monkeypatch):
-        """current_step part de 2, doit devenir 3."""
+        """current_step borné (D-01) : plan=3 items, step=2 → min(3, len-1=2) = 2.
+
+        D-01 : next_step = min(current_step+1, len(plan)-1) if plan else 0.
+        Avec plan de 3 sous-questions et current_step=2, le prochain step serait 3
+        mais est borné à len(plan)-1=2 pour éviter un dépassement d'index.
+        """
         monkeypatch.setattr(nodes, "flash_llm", lambda: _FakeLLM("SUFFISANT"))
         state = _make_state(plan=["Q1 ?", "Q2 ?", "Q3 ?"], iterations=1, current_step=2)
         result = nodes.critic_node(state)
-        assert result["current_step"] == 3
+        # D-01 borne current_step : min(2+1, 3-1) = min(3, 2) = 2
+        assert result["current_step"] == 2
 
     def test_returns_finding_source_critic_sufficient(self, monkeypatch):
         """Quand flash répond SUFFISANT, le finding source=critic a sufficient=True."""
