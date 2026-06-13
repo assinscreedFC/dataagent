@@ -100,41 +100,101 @@ def _extract_tables(sql: str, schema: str) -> list[str]:
     return [t for t in known_tables if t.upper() in sql_upper]
 
 
-def _execute_subquestion(
-    conn: duckdb.DuckDBPyConnection,
-    schema: str,
-    subquestion: str,
-) -> dict:
-    """Génère et exécute le SQL pour une sous-question. Retourne un finding dict."""
-    # Génération SQL avec Flash
+def _generate_sql(schema: str, subquestion: str) -> str:
+    """Génère une requête SQL initiale via Flash LLM à partir du schema et de la sous-question."""
     system_msg = (
         f"Voici le schema DuckDB :\n{schema}\n"
         "Écris UNE requête SQL DuckDB valide qui répond à la question suivante. "
         "Réponds avec le SQL brut uniquement, sans markdown."
     )
     response = flash_llm().invoke([("system", system_msg), ("human", subquestion)])
-    sql = _clean_sql(response.content)
+    return _clean_sql(response.content)
 
-    base_finding: dict = {
+
+def _regenerate_sql(schema: str, subquestion: str, bad_sql: str, error: str) -> str:
+    """Re-prompte Flash LLM avec la query fautive + erreur DuckDB exacte pour correction (D-04)."""
+    system_msg = (
+        f"Voici le schema DuckDB :\n{schema}\n"
+        f"La query suivante a échoué :\n{bad_sql}\n"
+        f"Erreur DuckDB : {error}\n"
+        "Corrige cette query SQL DuckDB pour répondre à la question. "
+        "SQL brut uniquement."
+    )
+    response = flash_llm().invoke([("system", system_msg), ("human", subquestion)])
+    return _clean_sql(response.content)
+
+
+def _execute_subquestion(
+    conn: duckdb.DuckDBPyConnection,
+    schema: str,
+    subquestion: str,
+) -> dict:
+    """Génère et exécute le SQL pour une sous-question avec validation EXPLAIN + retry borné.
+
+    Boucle bornée par SQL_MAX_RETRIES (D-03) :
+    - attempt 1 : génération initiale (_generate_sql)
+    - attempts > 1 : re-prompt avec query fautive + erreur DuckDB (_regenerate_sql, D-04)
+    - Validation via EXPLAIN avant chaque exec (D-01, D-02)
+    - Épuisement → finding d'erreur explicite, jamais de re-raise (D-05)
+    - Finding succès étend format Phase 1 avec clé attempts (D-06)
+    """
+    last_sql: str = ""
+    last_error: str = ""
+
+    for attempt in range(1, SQL_MAX_RETRIES + 2):  # 1 initiale + SQL_MAX_RETRIES retries
+        # Génération ou re-génération SQL
+        if attempt == 1:
+            sql = _generate_sql(schema, subquestion)
+        else:
+            sql = _regenerate_sql(schema, subquestion, bad_sql=last_sql, error=last_error)
+
+        # Validation EXPLAIN (D-01) — parse + résout sans scanner les données
+        validation_error = _validate_sql(conn, sql)
+        if validation_error is not None:
+            last_sql, last_error = sql, validation_error
+            continue
+
+        # Exécution sur les données
+        try:
+            cursor = conn.execute(sql)
+            rows = cursor.fetchall()
+            columns = [desc[0] for desc in cursor.description] if cursor.description else []
+            tables = _extract_tables(sql, schema)
+            return {
+                "source": "sql_tool",
+                "subquestion": subquestion,
+                "sql": sql,
+                "tables": tables,
+                "rows": rows,
+                "columns": columns,
+                "attempts": attempt,
+            }
+        except (duckdb.Error, Exception) as exc:  # noqa: BLE001
+            last_sql, last_error = sql, str(exc)
+            logger.error(
+                "sql_tool_node: SQL execution failed — subquestion=%r sql=%r error=%s attempt=%d",
+                subquestion,
+                sql,
+                exc,
+                attempt,
+            )
+            continue
+
+    # Épuisement de tous les retries (D-05) — finding d'erreur, pas de crash
+    logger.error(
+        "sql_tool_node: all %d attempts exhausted — subquestion=%r last_sql=%r last_error=%s",
+        SQL_MAX_RETRIES + 1,
+        subquestion,
+        last_sql,
+        last_error,
+    )
+    return {
         "source": "sql_tool",
         "subquestion": subquestion,
-        "sql": sql,
+        "sql": last_sql,
+        "error": last_error,
+        "attempts": SQL_MAX_RETRIES + 1,
     }
-
-    try:
-        cursor = conn.execute(sql)
-        rows = cursor.fetchall()
-        columns = [desc[0] for desc in cursor.description] if cursor.description else []
-        tables = _extract_tables(sql, schema)
-        return {**base_finding, "tables": tables, "rows": rows, "columns": columns}
-    except (duckdb.Error, Exception) as exc:  # noqa: BLE001
-        logger.error(
-            "sql_tool_node: SQL execution failed — subquestion=%r sql=%r error=%s",
-            subquestion,
-            sql,
-            exc,
-        )
-        return {**base_finding, "error": str(exc)}
 
 
 def sql_tool_node(state: AgentState) -> dict:
