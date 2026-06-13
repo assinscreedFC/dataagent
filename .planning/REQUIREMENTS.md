@@ -29,7 +29,7 @@ Requirements pour l'agent complet (jalons J2→J4). J1 data layer déjà validé
 
 ### Eval & API (J4)
 
-- [ ] **EVAL-01**: Un jeu de 10 questions test mesure la correctness des réponses
+- [x] **EVAL-01**: Un jeu de 10 questions test mesure la correctness des réponses
 - [ ] **API-01**: Un endpoint FastAPI `/ask` accepte une question et retourne le rapport
 - [ ] **DEMO-01**: Le rapport est rendu en HTML et capturé en screenshots pour Labs (rebrand SolidScale)
 
@@ -64,7 +64,7 @@ Requirements pour l'agent complet (jalons J2→J4). J1 data layer déjà validé
 | TOOL-06 | Phase 4 | Complete |
 | TOOL-07 | Phase 5 | Complete |
 | TOOL-08 | Phase 4 | Complete |
-| EVAL-01 | Phase 6 | Pending |
+| EVAL-01 | Phase 6 | Complete |
 | API-01 | Phase 6 | Pending |
 | DEMO-01 | Phase 6 | Pending |
 

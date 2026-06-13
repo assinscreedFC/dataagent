@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: verifying
-stopped_at: Completed 05-resumability/05-01-PLAN.md
-last_updated: "2026-06-13T15:24:57.908Z"
+status: executing
+stopped_at: Completed 06-eval-api-demo/06-01-PLAN.md
+last_updated: "2026-06-13T15:45:50.831Z"
 last_activity: 2026-06-13
 progress:
   total_phases: 6
   completed_phases: 5
-  total_plans: 9
-  completed_plans: 9
-  percent: 100
+  total_plans: 12
+  completed_plans: 10
+  percent: 83
 ---
 
 # Project State
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-13)
 
 **Core value:** Une question business en langage naturel produit un rapport correct, sourcé et visualisé — sans intervention humaine dans la boucle d'analyse.
-**Current focus:** Phase 5 — Resumability
+**Current focus:** Phase 6 — Eval, API & Demo
 
 ## Current Position
 
-Phase: 6
-Plan: Not started
-Status: Phase complete — ready for verification
+Phase: 6 (Eval, API & Demo) — EXECUTING
+Plan: 2 of 3
+Status: Ready to execute
 Last activity: 2026-06-13
 
 Progress: [░░░░░░░░░░] 0%
@@ -65,6 +65,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 04-router-critic-loop P01 | 966 | 3 tasks | 4 files |
 | Phase 04-router-critic-loop P02 | 1200 | 3 tasks | 5 files |
 | Phase 05-resumability P01 | 40 | 3 tasks | 3 files |
+| Phase 06 P01 | 751 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -94,6 +95,8 @@ Recent decisions affecting current work:
 - [Phase 05-resumability]: _FilteredSqliteSaver strips db from __start__ channel before msgpack serialization (UntrackedValue not enough)
 - [Phase 05-resumability]: LangGraph re-runs full graph on same thread_id for completed checkpoints — findings accumulate via add reducer as proof of checkpoint activity
 - [Phase 05-resumability]: run(thread_id) passes initial_state() to invoke() with FilteredSqliteSaver filtering db — conn fresh per run (D-05)
+- [Phase 06]: score_report retourne 0.0 sur liste vide — sémantique zéro critères => zéro score
+- [Phase 06]: run_fn injectable en paramètre de run_eval (default=graph.run) — tests sans quota Gemini (D-03)
 
 ### Pending Todos
 
@@ -105,6 +108,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-06-13T15:12:11.909Z
-Stopped at: Completed 05-resumability/05-01-PLAN.md
+Last session: 2026-06-13T15:45:50.816Z
+Stopped at: Completed 06-eval-api-demo/06-01-PLAN.md
 Resume file: None
