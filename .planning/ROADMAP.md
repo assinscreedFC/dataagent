@@ -95,7 +95,10 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. `POST /ask` avec une question retourne le rapport généré
   3. Le rapport est rendu en HTML
   4. Des screenshots du rapport (rebrand SolidScale) sont produits pour Labs
-**Plans**: TBD
+**Plans**: 3 plans
+  - [ ] 06-01-PLAN.md — Eval harness : dataset 10 Q/R Olist + runner score correctness (keyword-ratio), testé LLM mocké (live run = human-verify)
+  - [ ] 06-02-PLAN.md — API FastAPI : POST /ask (run → report+findings) + GET /health, testé TestClient agent mocké
+  - [ ] 06-03-PLAN.md — Renderer : markdown → HTML standalone SolidScale + images viz embarquées (reports/*.html), screenshots = human-verify
 **UI hint**: yes
 
 ## Progress
@@ -110,7 +113,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 3. Stats & Viz Tools | 2/2 | Complete   | 2026-06-13 |
 | 4. Router & Critic Loop | 2/2 | Complete   | 2026-06-13 |
 | 5. Resumability | 1/1 | Complete   | 2026-06-13 |
-| 6. Eval, API & Demo | 0/TBD | Not started | - |
+| 6. Eval, API & Demo | 0/3 | Not started | - |
 
 ---
 *Roadmap created: 2026-06-13*
