@@ -83,7 +83,8 @@ Decimal phases appear between their surrounding integers in numeric order.
   1. Le graphe est compilé avec un `checkpointer` SqliteSaver
   2. Un run identifié par thread_id écrit son état dans le store SQLite
   3. Relancer le même thread_id reprend l'état au lieu de repartir de zéro
-**Plans**: TBD
+**Plans**: 1 plan
+  - [ ] 05-01-PLAN.md — CHECKPOINT_DB (config) + build_graph(checkpointer) + run(thread_id) avec ré-injection conn DuckDB (D-05) + tests reprise
 
 ### Phase 6: Eval, API & Demo
 **Goal**: La correctness de l'agent est mesurée, exposée via une API, et la demo Labs est capturée.
@@ -108,7 +109,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 2. SQL Tool Hardening | 1/1 | Complete   | 2026-06-13 |
 | 3. Stats & Viz Tools | 2/2 | Complete   | 2026-06-13 |
 | 4. Router & Critic Loop | 2/2 | Complete   | 2026-06-13 |
-| 5. Resumability | 0/TBD | Not started | - |
+| 5. Resumability | 0/1 | Not started | - |
 | 6. Eval, API & Demo | 0/TBD | Not started | - |
 
 ---
