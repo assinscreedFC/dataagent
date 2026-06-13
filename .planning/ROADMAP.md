@@ -8,4 +8,4 @@
 **Plans**: 3 plans
   - [x] 01-01-PLAN.md — Fondations : config Gemini + AgentState (8 champs, db UntrackedValue) + factory LLM
   - [x] 01-02-PLAN.md — Nodes : planner (Flash) + sql_tool minimal + synthesizer (Pro) + introspection schema
-  - [ ] 01-03-PLAN.md — Graph compilé linéaire + CLI `python -m dataagent` + test end-to-end
+  - [x] 01-03-PLAN.md — Graph compilé linéaire + CLI `python -m dataagent` + test end-to-end
