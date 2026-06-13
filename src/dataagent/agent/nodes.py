@@ -202,27 +202,30 @@ def _execute_subquestion(
 
 
 def sql_tool_node(state: AgentState) -> dict:
-    """Génère et exécute du SQL pour chaque sous-question du plan.
+    """Génère et exécute du SQL pour la sous-question courante du plan (current_step).
 
     Durci (phase 2) : validation EXPLAIN pré-exec + retry borné (SQL_MAX_RETRIES).
     Erreur SQL persistante -> finding d'erreur propre, pas de crash, pas de re-raise.
-    Incrémente iterations (structure prête phase 4, D-10).
+    N'incrémente plus iterations — possédé par le critic en Phase 4 (D-06).
 
-    Retourne {"findings": [...], "iterations": N+1}.
+    Retourne {"findings": [...]}.
     """
     conn: duckdb.DuckDBPyConnection = state["db"]
     schema = schema_description(conn)
     plan: list[str] = state.get("plan") or [state["question"]]
+    current_step: int = state.get("current_step", 0)
 
-    findings = []
-    for subquestion in plan:
-        finding = _execute_subquestion(conn, schema, subquestion)
-        findings.append(finding)
+    # Dans le graphe branché (Phase 4), on traite la sous-question courante uniquement
+    if plan and current_step < len(plan):
+        subquestion = plan[current_step]
+    elif plan:
+        subquestion = plan[0]
+    else:
+        subquestion = state["question"]
 
-    return {
-        "findings": findings,
-        "iterations": state["iterations"] + 1,
-    }
+    finding = _execute_subquestion(conn, schema, subquestion)
+
+    return {"findings": [finding]}
 
 
 # ---------------------------------------------------------------------------
