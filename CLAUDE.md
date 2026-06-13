@@ -11,7 +11,7 @@ Agent analyste data autonome. Tu poses une question business en langage naturel 
 
 - **Tech stack**: LangGraph v1.0, `StateGraph` manuel — la doc recommande le StateGraph manuel dès qu'on a parallel nodes/supervisor/retry custom/branching ; la critic loop coche tout.
 - **Tech stack**: DuckDB + Polars pour query/transform, plotly + kaleido pour viz, FastAPI + uvicorn pour l'API.
-- **LLM**: Claude uniquement — Haiku (planner/router/critic, cheap+rapide), Opus (synthesizer, qualité rapport).
+- **LLM**: Gemini via `langchain-google-genai` — Flash (planner/router/critic, cheap+rapide), Pro (synthesizer, qualité rapport). Clé `GEMINI_API_KEY` via `.env`. Décision révisée 2026-06-13 (pas de clé Anthropic ; Claude figé au plan initial).
 - **Coût**: `max_iterations` hard stop dans le state dès J2 — empêche boucle critic infinie.
 - **Tests**: vraie I/O DuckDB sur fixtures synthétiques, jamais de mock I/O ; pytest + dataset 10 Q/R pour l'eval.
 <!-- GSD:project-end -->
