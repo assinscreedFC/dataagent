@@ -10,6 +10,7 @@ REPORTS = PROJECT_ROOT / "reports"
 DEFAULT_TOP_N = 10
 MAX_ITERATIONS = 5  # garde-fou coût boucle critic (J4)
 SQL_MAX_RETRIES = 2  # garde-fou retry intra-tool sql (D-03), distinct de MAX_ITERATIONS (critic loop)
+ANOMALY_Z_THRESHOLD = 3.0  # |z| > seuil => anomalie (D-03)
 
 # Modèles Gemini — override possible via variables d'environnement (D-07)
 # NB: gemini-2.0-flash et gemini-2.5-pro renvoient 429 (free tier limit:0) sur la clé
