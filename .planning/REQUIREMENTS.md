@@ -20,7 +20,7 @@ Requirements pour l'agent complet (jalons J2→J4). J1 data layer déjà validé
 
 - [x] **TOOL-01**: sql_tool génère du SQL, le valide sur le schema DuckDB avant exec, retry sur erreur, push findings
 - [x] **TOOL-02**: stats_tool calcule corrélations, agrégats et détecte les anomalies via Polars
-- [ ] **TOOL-03**: viz_tool produit un PNG plotly et enregistre son chemin dans findings
+- [x] **TOOL-03**: viz_tool produit un PNG plotly et enregistre son chemin dans findings
 - [ ] **TOOL-04**: Le router (conditional edge) est type-hinté avec `path_map` et choisit le tool selon la sous-question courante
 - [ ] **TOOL-05**: Le node critic (Gemini Flash) juge si les findings suffisent, reboucle ou synthétise, et incrémente iterations
 - [ ] **TOOL-06**: La critic loop s'arrête au hard cap `max_iterations`
@@ -58,7 +58,7 @@ Requirements pour l'agent complet (jalons J2→J4). J1 data layer déjà validé
 | GRAPH-06 | Phase 1 | Complete |
 | TOOL-01 | Phase 2 | Complete |
 | TOOL-02 | Phase 3 | Complete |
-| TOOL-03 | Phase 3 | Pending |
+| TOOL-03 | Phase 3 | Complete |
 | TOOL-04 | Phase 4 | Pending |
 | TOOL-05 | Phase 4 | Pending |
 | TOOL-06 | Phase 4 | Pending |
