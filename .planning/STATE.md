@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: verifying
-stopped_at: Completed 04-router-critic-loop/04-02-PLAN.md
-last_updated: "2026-06-13T14:42:19.591Z"
+stopped_at: Completed 05-resumability/05-01-PLAN.md
+last_updated: "2026-06-13T15:12:11.921Z"
 last_activity: 2026-06-13
 progress:
   total_phases: 6
-  completed_phases: 4
-  total_plans: 8
-  completed_plans: 8
+  completed_phases: 5
+  total_plans: 9
+  completed_plans: 9
   percent: 100
 ---
 
@@ -21,12 +21,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-13)
 
 **Core value:** Une question business en langage naturel produit un rapport correct, sourcé et visualisé — sans intervention humaine dans la boucle d'analyse.
-**Current focus:** Phase 4 — Router & Critic Loop
+**Current focus:** Phase 5 — Resumability
 
 ## Current Position
 
-Phase: 5
-Plan: Not started
+Phase: 5 (Resumability) — EXECUTING
+Plan: 1 of 1
 Status: Phase complete — ready for verification
 Last activity: 2026-06-13
 
@@ -63,6 +63,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 03-stats-viz-tools P03-02 | 17 | 3 tasks | 3 files |
 | Phase 04-router-critic-loop P01 | 966 | 3 tasks | 4 files |
 | Phase 04-router-critic-loop P02 | 1200 | 3 tasks | 5 files |
+| Phase 05-resumability P01 | 40 | 3 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -89,6 +90,9 @@ Recent decisions affecting current work:
 - [Phase 03-stats-viz-tools]: viz_tool_node renders only first chartable sql_tool finding per call; does not increment iterations
 - [Phase 04-router-critic-loop]: route_subquestion uses keyword heuristic (deterministic) with index guard; critic_node exposes sufficient:bool via last finding source=critic for Plan 02 path_map
 - [Phase 04-router-critic-loop]: _router_node pass-through + add_conditional_edges path_map; _critic_decision hard cap applicatif (iterations>=max avant GraphRecursionError); sql_tool_node traite uniquement current_step
+- [Phase 05-resumability]: _FilteredSqliteSaver strips db from __start__ channel before msgpack serialization (UntrackedValue not enough)
+- [Phase 05-resumability]: LangGraph re-runs full graph on same thread_id for completed checkpoints — findings accumulate via add reducer as proof of checkpoint activity
+- [Phase 05-resumability]: run(thread_id) passes initial_state() to invoke() with FilteredSqliteSaver filtering db — conn fresh per run (D-05)
 
 ### Pending Todos
 
@@ -100,6 +104,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-06-13T14:31:04.219Z
-Stopped at: Completed 04-router-critic-loop/04-02-PLAN.md
+Last session: 2026-06-13T15:12:11.909Z
+Stopped at: Completed 05-resumability/05-01-PLAN.md
 Resume file: None

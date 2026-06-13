@@ -16,7 +16,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: SQL Tool Hardening** - sql_tool valide la query sur le schema DuckDB et retry sur erreur (completed 2026-06-13)
 - [x] **Phase 3: Stats & Viz Tools** - stats_tool (corrélation/anomalies) + viz_tool (PNG plotly), parallélisables (completed 2026-06-13)
 - [x] **Phase 4: Router & Critic Loop** - Router type-hinté + critic loop avec hard cap, rapport multi-source (J3) (completed 2026-06-13)
-- [ ] **Phase 5: Resumability** - Checkpointer SqliteSaver pour runs resumables
+- [x] **Phase 5: Resumability** - Checkpointer SqliteSaver pour runs resumables (completed 2026-06-13)
 - [ ] **Phase 6: Eval, API & Demo** - Eval 10 Q/R, endpoint FastAPI `/ask`, rapport HTML + screenshots Labs (J4)
 
 ## Phase Details
@@ -84,7 +84,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. Un run identifié par thread_id écrit son état dans le store SQLite
   3. Relancer le même thread_id reprend l'état au lieu de repartir de zéro
 **Plans**: 1 plan
-  - [ ] 05-01-PLAN.md — CHECKPOINT_DB (config) + build_graph(checkpointer) + run(thread_id) avec ré-injection conn DuckDB (D-05) + tests reprise
+  - [x] 05-01-PLAN.md — CHECKPOINT_DB (config) + build_graph(checkpointer) + run(thread_id) avec ré-injection conn DuckDB (D-05) + tests reprise
 
 ### Phase 6: Eval, API & Demo
 **Goal**: La correctness de l'agent est mesurée, exposée via une API, et la demo Labs est capturée.
@@ -109,7 +109,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 2. SQL Tool Hardening | 1/1 | Complete   | 2026-06-13 |
 | 3. Stats & Viz Tools | 2/2 | Complete   | 2026-06-13 |
 | 4. Router & Critic Loop | 2/2 | Complete   | 2026-06-13 |
-| 5. Resumability | 0/1 | Not started | - |
+| 5. Resumability | 1/1 | Complete   | 2026-06-13 |
 | 6. Eval, API & Demo | 0/TBD | Not started | - |
 
 ---

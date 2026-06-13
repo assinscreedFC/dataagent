@@ -24,7 +24,7 @@ Requirements pour l'agent complet (jalons J2→J4). J1 data layer déjà validé
 - [x] **TOOL-04**: Le router (conditional edge) est type-hinté avec `path_map` et choisit le tool selon la sous-question courante
 - [x] **TOOL-05**: Le node critic (Gemini Flash) juge si les findings suffisent, reboucle ou synthétise, et incrémente iterations
 - [x] **TOOL-06**: La critic loop s'arrête au hard cap `max_iterations`
-- [ ] **TOOL-07**: Un `checkpointer` SqliteSaver rend le run resumable
+- [x] **TOOL-07**: Un `checkpointer` SqliteSaver rend le run resumable
 - [x] **TOOL-08**: Une question complexe produit un rapport multi-source avec graphe
 
 ### Eval & API (J4)
@@ -62,7 +62,7 @@ Requirements pour l'agent complet (jalons J2→J4). J1 data layer déjà validé
 | TOOL-04 | Phase 4 | Complete |
 | TOOL-05 | Phase 4 | Complete |
 | TOOL-06 | Phase 4 | Complete |
-| TOOL-07 | Phase 5 | Pending |
+| TOOL-07 | Phase 5 | Complete |
 | TOOL-08 | Phase 4 | Complete |
 | EVAL-01 | Phase 6 | Pending |
 | API-01 | Phase 6 | Pending |
