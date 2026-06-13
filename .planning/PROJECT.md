@@ -12,28 +12,31 @@ Une question business en langage naturel produit un rapport correct, sourcé et 
 
 ### Validated
 
-<!-- Shipped et confirmé — J1 data layer livrée et testée 11/11, cov 100%. -->
+<!-- Shipped et confirmé. J1 data layer + milestone v1.0 (agent complet J2→J4, 6 phases, 12 plans, 163 tests). -->
 
 - ✓ Chargement Olist CSV → DuckDB avec nommage ergonomique des tables — J1
-- ✓ 5 queries business retournant des DataFrames Polars (revenue_by_month, top_categories, delivery_delay_vs_review, orders_by_status, avg_review_score_by_month) — J1
+- ✓ 5 queries business retournant des DataFrames Polars — J1
 - ✓ Tests sur fixtures synthétiques (vraie I/O DuckDB, pas de mock) — J1
+- ✓ Couche LLM Gemini via `langchain-google-genai` (Flash planner/router/critic, synthesizer) — v1.0 Phase 1
+- ✓ StateGraph LangGraph boucle planner → sql_tool → synthesizer end-to-end + `python -m dataagent` (run live validé) — v1.0 Phase 1
+- ✓ Garde-fou coût `max_iterations` câblé dans le state — v1.0 Phase 1
+- ✓ sql_tool durci : validation EXPLAIN pré-exec + retry borné — v1.0 Phase 2
+- ✓ stats_tool (corrélation Pearson + anomalies z-score, Polars) — v1.0 Phase 3
+- ✓ viz_tool (plotly → PNG kaleido, chemin dans findings) — v1.0 Phase 3
+- ✓ Router conditional type-hinté + path_map — v1.0 Phase 4
+- ✓ Critic loop avec hard cap iterations (anti-boucle-infinie prouvé) — v1.0 Phase 4
+- ✓ Rapport multi-source (sql+stats+viz, graphe embarqué) — v1.0 Phase 4
+- ✓ Checkpointer SqliteSaver pour resumabilité (thread_id) — v1.0 Phase 5
+- ✓ Eval : 10 questions test, correctness mesurée (harness) — v1.0 Phase 6
+- ✓ FastAPI endpoint `POST /ask` + `GET /health` — v1.0 Phase 6
+- ✓ Rapport rendu HTML (rebrand SolidScale, images embarquées) — v1.0 Phase 6
 
 ### Active
 
-<!-- Scope en construction — jalons J2 à J4 du PLAN. Hypothèses jusqu'à livraison. -->
+<!-- Milestone v1.0 livré. Items manuels restants (hors quota/browser) : -->
 
-- [ ] Couche LLM via `langchain-google-genai` (Gemini) : Flash pour planner/router/critic, Pro pour synthesizer
-- [ ] StateGraph LangGraph v1.0 : boucle planner → sql_tool → synthesizer end-to-end (J2)
-- [ ] Garde-fou coût `max_iterations` câblé dans le state dès J2
-- [ ] `python -m dataagent "CA total 2017 ?"` retourne une réponse correcte (J2)
-- [ ] stats_tool (Polars : corrélation, agrégats, anomalies) (J3)
-- [ ] viz_tool (plotly → PNG, chemin dans findings) (J3)
-- [ ] Router conditional type-hinté + path_map (J3)
-- [ ] Critic loop avec hard cap iterations (J3)
-- [ ] Checkpointer SqliteSaver pour resumabilité (J3)
-- [ ] Eval : 10 questions test, correctness mesurée (J4)
-- [ ] FastAPI endpoint `/ask` (J4)
-- [ ] Rapport HTML → screenshots Labs (rebrand SolidScale) (J4)
+- [ ] Run live des 10 questions eval (score correctness réel) — manuel, quota Gemini free tier
+- [ ] Capture screenshots du rapport HTML pour Labs — manuel, navigateur headless
 
 ### Out of Scope
 
