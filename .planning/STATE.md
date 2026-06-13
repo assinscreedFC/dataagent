@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: — Hardening
-status: executing
-stopped_at: Completed 07-hardening-bug-fixes/07-03-PLAN.md
-last_updated: "2026-06-13T18:27:35.218Z"
+status: verifying
+stopped_at: Completed 07-hardening-bug-fixes/07-04-PLAN.md
+last_updated: "2026-06-13T18:54:04.199Z"
 last_activity: 2026-06-13
 progress:
   total_phases: 1
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 4
-  completed_plans: 3
-  percent: 75
+  completed_plans: 4
+  percent: 100
 ---
 
 # Project State
@@ -27,7 +27,7 @@ See: .planning/PROJECT.md (updated 2026-06-13)
 
 Phase: 7 (Hardening & Bug Fixes) — EXECUTING
 Plan: 4 of 4
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-06-13
 
 Progress: [░░░░░░░░░░] 0%
@@ -72,6 +72,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 07-hardening-bug-fixes P07-01 | 12 | 3 tasks | 5 files |
 | Phase 07 P02 | 20 | 3 tasks | 9 files |
 | Phase 07-hardening-bug-fixes P03 | 5 | 1 tasks | 2 files |
+| Phase 07-hardening-bug-fixes P07-04 | 35 | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -115,6 +116,9 @@ Recent decisions affecting current work:
 - [Phase 07-02]: D-07: html.escape(png_path, quote=True) in render.py before <img src> injection (HARD-06)
 - [Phase 07-02]: D-12: FastAPI lifespan creates one persistent DuckDB conn; ask() uses getattr fallback None for test compat (HARD-11)
 - [Phase 07-hardening-bug-fixes]: D-11: _flash/_pro lazy singletons in llm.py — one ChatGoogleGenerativeAI instance per process, monkeypatching preserved
+- [Phase 07-hardening-bug-fixes]: D-13a: DuckDB execute read-only (C-ext) — proxy wrapper _FailingConn used in tests instead of monkeypatch
+- [Phase 07-hardening-bug-fixes]: D-13b: Stale tests fixed by adding plan+current_step to test states (D-01/D-02 behavior), production code unchanged
+- [Phase 07-hardening-bug-fixes]: D-13c: CLI deferred import — tests must patch dataagent.agent.graph.run not __main__.run
 
 ### Pending Todos
 
@@ -126,6 +130,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-06-13T18:27:35.207Z
-Stopped at: Completed 07-hardening-bug-fixes/07-03-PLAN.md
+Last session: 2026-06-13T18:54:04.187Z
+Stopped at: Completed 07-hardening-bug-fixes/07-04-PLAN.md
 Resume file: None

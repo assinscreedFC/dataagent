@@ -33,7 +33,7 @@ Corrections issues de la revue. Priorité : correctness boucle agent > sécurit�
 
 ### Tests (MEDIUM)
 
-- [ ] **HARD-12**: Couverture des blind spots — `__main__.py` (CLI), chemin échec exécution SQL (EXPLAIN passe / execute raise), gardes `except` stats/viz, fallback planner vide ; viser ≥85% global
+- [x] **HARD-12**: Couverture des blind spots — `__main__.py` (CLI), chemin échec exécution SQL (EXPLAIN passe / execute raise), gardes `except` stats/viz, fallback planner vide ; viser ≥85% global
 
 ## Out of Scope
 
@@ -59,7 +59,7 @@ Corrections issues de la revue. Priorité : correctness boucle agent > sécurit�
 | HARD-09 | Phase 7 | Complete |
 | HARD-10 | Phase 7 | Complete |
 | HARD-11 | Phase 7 | Complete |
-| HARD-12 | Phase 7 | Pending |
+| HARD-12 | Phase 7 | Complete |
 
 **Coverage:**
 - v1.1 requirements: 12 total
