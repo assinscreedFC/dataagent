@@ -1,17 +1,17 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.0
-milestone_name: milestone
-status: verifying
-stopped_at: Completed 06-eval-api-demo/06-03-PLAN.md
-last_updated: "2026-06-13T16:54:52.779Z"
+milestone: v1.1
+milestone_name: — Hardening
+status: executing
+stopped_at: Completed 07-hardening-bug-fixes/07-01-PLAN.md
+last_updated: "2026-06-13T18:04:13.303Z"
 last_activity: 2026-06-13
 progress:
-  total_phases: 6
-  completed_phases: 6
-  total_plans: 12
-  completed_plans: 12
-  percent: 100
+  total_phases: 1
+  completed_phases: 0
+  total_plans: 4
+  completed_plans: 1
+  percent: 25
 ---
 
 # Project State
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-13)
 
 **Core value:** Une question business en langage naturel produit un rapport correct, sourcé et visualisé — sans intervention humaine dans la boucle d'analyse.
-**Current focus:** Phase 6 — Eval, API & Demo
+**Current focus:** Phase 7 — Hardening & Bug Fixes
 
 ## Current Position
 
-Phase: 06
-Plan: Not started
-Status: Phase complete — ready for verification
+Phase: 7 (Hardening & Bug Fixes) — EXECUTING
+Plan: 2 of 4
+Status: Ready to execute
 Last activity: 2026-06-13
 
 Progress: [░░░░░░░░░░] 0%
@@ -69,6 +69,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 06 P01 | 751 | 2 tasks | 4 files |
 | Phase 06 P06-02 | 12 | 2 tasks | 2 files |
 | Phase 06-eval-api-demo P06-03 | 13 | 1 tasks | 2 files |
+| Phase 07-hardening-bug-fixes P07-01 | 12 | 3 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -103,6 +104,9 @@ Recent decisions affecting current work:
 - [Phase 06]: AskRequest min_length=1 rejects empty question at Pydantic layer (T-06-01); run() imported at module top for monkeypatch (D-05); sync handlers in FastAPI threadpool for blocking run() (D-04)
 - [Phase 06-eval-api-demo]: render_html injects extra img only when png_path absent from markdown (synthesizer may already embed it)
 - [Phase 06-eval-api-demo]: CSS inlined in head — standalone HTML, no external assets required
+- [Phase 07-01]: D-01/D-02: critic_node bounds next_step + _critic_decision early-exit when plan exhausted; hard cap preserved
+- [Phase 07-01]: D-08: _as_text(response)->str helper after every .invoke() — type-safe, handles multi-part LLM responses
+- [Phase 07-01]: D-10: schema:str in AgentState computed once in run(), propagated via state; sql_tool_node uses fallback
 
 ### Pending Todos
 
@@ -114,6 +118,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-06-13T16:11:48.996Z
-Stopped at: Completed 06-eval-api-demo/06-03-PLAN.md
+Last session: 2026-06-13T18:04:13.293Z
+Stopped at: Completed 07-hardening-bug-fixes/07-01-PLAN.md
 Resume file: None
