@@ -3,11 +3,13 @@
 Conforme D-01 (path_map obligatoire anti-misroute silencieux), D-04 (StateGraph compilé),
 D-05 (connexion DuckDB créée à l'entrée), D-06 (hard cap max_iterations via _critic_decision),
 GRAPH-06 (run helper pour le CLI), TOOL-04 (router conditionnel), TOOL-05 (critic reboucle),
-TOOL-06 (arrêt hard cap), TOOL-08 (rapport multi-source).
+TOOL-06 (arrêt hard cap), TOOL-07 (resumabilité via checkpointer SqliteSaver), TOOL-08 (rapport multi-source).
 """
 
+import sqlite3
 from typing import Literal
 
+from langgraph.checkpoint.sqlite import SqliteSaver
 from langgraph.graph import END, START, StateGraph
 
 from dataagent.agent.nodes import (
@@ -20,7 +22,7 @@ from dataagent.agent.nodes import (
     viz_tool_node,
 )
 from dataagent.agent.state import AgentState, initial_state
-from dataagent.config import DATA_RAW
+from dataagent.config import CHECKPOINT_DB, DATA_RAW
 from dataagent.data.loader import connect, load_csvs_to_duckdb
 
 
@@ -79,8 +81,8 @@ def _critic_decision(state: AgentState) -> Literal["router", "synthesizer"]:
 # ---------------------------------------------------------------------------
 
 
-def build_graph():
-    """Compile le graphe agentique branché conforme au schéma PLAN.md (TOOL-04/05/06/08).
+def build_graph(checkpointer=None):
+    """Compile le graphe agentique branché conforme au schéma PLAN.md (TOOL-04/05/06/07/08).
 
     Topologie :
         START -> planner -> router -+-> sql_tool ---+
@@ -143,7 +145,7 @@ def build_graph():
     # Edge de sortie : synthesizer -> END
     g.add_edge("synthesizer", END)
 
-    return g.compile()
+    return g.compile(checkpointer=checkpointer)
 
 
 # ---------------------------------------------------------------------------
@@ -151,16 +153,27 @@ def build_graph():
 # ---------------------------------------------------------------------------
 
 
-def run(question: str, conn=None) -> dict:
+def run(question: str, conn=None, thread_id: str | None = None) -> dict:
     """Invoque le graphe agentique pour une question donnée et retourne l'état final.
 
     Crée la connexion DuckDB + charge Olist si `conn` n'est pas injecté (D-05).
     Le paramètre optionnel `conn` permet l'injection en test (fixture mini-Olist,
     sans recharger les 9 CSV réels).
 
+    Resumabilité (TOOL-07, D-03/D-04/D-05) :
+    - Sans `thread_id` : run éphémère, comportement Phase 4 inchangé.
+    - Avec `thread_id` : compile le graphe avec un SqliteSaver sur CHECKPOINT_DB et
+      invoque avec config thread_id. LangGraph restaure automatiquement le dernier
+      checkpoint du thread (plan/findings/iterations/current_step). La connexion DuckDB
+      est UntrackedValue (jamais checkpointée) — elle est ré-injectée fraîche à chaque
+      run via initial_state(), même à la reprise (D-05).
+
     Args:
         question: La question business en langage naturel.
-        conn: Connexion DuckDB déjà chargée (optionnel — injection de test).
+        conn: Connexion DuckDB déjà chargée (optionnel — injection de test ou reprise).
+        thread_id: Identifiant de thread pour la persistance SQLite (optionnel).
+            Si fourni, l'état est checkpointé dans CHECKPOINT_DB et un run ultérieur
+            avec le même thread_id reprendra depuis le dernier checkpoint.
 
     Returns:
         AgentState final (dict) contenant plan, findings, report, iterations, etc.
@@ -170,5 +183,20 @@ def run(question: str, conn=None) -> dict:
         load_csvs_to_duckdb(conn, DATA_RAW)
 
     state = initial_state(question, conn)
-    app = build_graph()
-    return app.invoke(state)
+
+    if thread_id is None:
+        # Run éphémère : comportement Phase 4 intact (D-03)
+        app = build_graph()
+        return app.invoke(state)
+
+    # Run persistant : checkpointer SqliteSaver sur CHECKPOINT_DB (TOOL-07, D-03/D-04)
+    # Connexion sqlite3 explicite (pas from_conn_string — context manager incompatible
+    # avec un graphe persistant retourné).
+    saver_conn = sqlite3.connect(str(CHECKPOINT_DB), check_same_thread=False)
+    try:
+        checkpointer = SqliteSaver(saver_conn)
+        app = build_graph(checkpointer=checkpointer)
+        config = {"configurable": {"thread_id": thread_id}}
+        return app.invoke(state, config=config)
+    finally:
+        saver_conn.close()
