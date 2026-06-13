@@ -1,7 +1,7 @@
 """Tests end-to-end du graphe LangGraph.
 
 Stratégie : vraie I/O DuckDB (fixture conn de conftest.py), mock UNIQUEMENT les LLMs.
-- build_graph() compile le graphe linéaire (D-04, GRAPH-02)
+- build_graph() compile le graphe branché (Phase 4 — 7 nodes, TOOL-04/05/06)
 - run() produit plan[], report markdown sourcé, findings avec sql, max_iterations=5
 - db injectée via conn=conn reste identique dans le state final (D-05, criterion #4)
 """
@@ -44,13 +44,13 @@ def test_build_graph_compiles():
     assert app is not None
 
 
-def test_graph_linear_structure():
-    """Le graphe doit contenir les 3 nodes attendus : planner, sql_tool, synthesizer."""
+def test_graph_branched_structure():
+    """Le graphe branché doit contenir les 7 nodes : planner, router, sql_tool, stats_tool, viz_tool, critic, synthesizer."""
     app = build_graph()
     graph_nodes = app.get_graph().nodes
-    assert "planner" in graph_nodes, "Node 'planner' absent du graphe"
-    assert "sql_tool" in graph_nodes, "Node 'sql_tool' absent du graphe"
-    assert "synthesizer" in graph_nodes, "Node 'synthesizer' absent du graphe"
+    expected = ["planner", "router", "sql_tool", "stats_tool", "viz_tool", "critic", "synthesizer"]
+    for node in expected:
+        assert node in graph_nodes, f"Node '{node}' absent du graphe branché"
 
 
 # ---------------------------------------------------------------------------
@@ -66,23 +66,26 @@ def test_run_end_to_end_produces_report(conn, monkeypatch):
     """
     from dataagent.agent import nodes
 
-    # Flash pour planner : retourne une seule sous-question
-    # Flash pour sql_tool : retourne un SQL valide sur le mini Olist
+    # Flash pour planner, sql_tool, critic : séquence déterministe
+    # Graphe branché : appel 1=planner, 2=sql_tool, 3=critic (SUFFISANT -> synth au 1er tour)
     flash_calls: list[int] = [0]
 
     class _FakeFlash:
-        """Fake Flash : planner d'abord, sql_tool ensuite."""
+        """Fake Flash : planner (1), sql_tool (2), critic SUFFISANT (3+)."""
 
         def invoke(self, messages):  # noqa: ANN001
             flash_calls[0] += 1
             if flash_calls[0] == 1:
-                # Premier appel : planner -> retourne une sous-question
+                # Premier appel : planner -> retourne une sous-question SQL
                 return _FakeResponse("CA total 2017 ?")
-            else:
-                # Appels suivants : sql_tool -> retourne du SQL valide
+            elif flash_calls[0] == 2:
+                # Deuxième appel : sql_tool -> SQL valide sur mini Olist
                 return _FakeResponse(
                     "SELECT SUM(price) AS total_ca FROM order_items"
                 )
+            else:
+                # Troisième appel+ : critic -> SUFFISANT (sortie au 1er tour)
+                return _FakeResponse("SUFFISANT")
 
     # Pro pour synthesizer : retourne un rapport markdown citant orders
     class _FakePro:

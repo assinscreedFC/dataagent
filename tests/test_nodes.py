@@ -145,9 +145,8 @@ def test_sql_tool_executes_and_pushes_finding(conn, monkeypatch):
     assert "rows" in finding
     assert "columns" in finding
     assert finding["source"] == "sql_tool"
-    # Vérifie l'incrément iterations
-    assert "iterations" in result
-    assert result["iterations"] == state["iterations"] + 1
+    # iterations n'est plus retourné par sql_tool_node (possédé par critic, D-06 Phase 4)
+    assert "iterations" not in result
 
 
 def test_sql_tool_handles_sql_error(conn, monkeypatch):
@@ -167,8 +166,8 @@ def test_sql_tool_handles_sql_error(conn, monkeypatch):
     finding = result["findings"][0]
     assert "error" in finding
     assert finding["source"] == "sql_tool"
-    # iterations toujours incrémenté même en erreur
-    assert result["iterations"] == state["iterations"] + 1
+    # iterations n'est plus retourné par sql_tool_node (possédé par critic, D-06 Phase 4)
+    assert "iterations" not in result
 
 
 def test_sql_tool_strips_markdown_fence(conn, monkeypatch):
@@ -334,8 +333,8 @@ def test_sql_tool_exhausts_retries_pushes_error(conn, monkeypatch):
     assert "error" in finding
     assert finding["source"] == "sql_tool"
     assert finding.get("attempts") == SQL_MAX_RETRIES + 1
-    # iterations toujours incrémenté
-    assert result["iterations"] == state["iterations"] + 1
+    # iterations n'est plus retourné par sql_tool_node (possédé par critic, D-06 Phase 4)
+    assert "iterations" not in result
 
 
 # ---------------------------------------------------------------------------
@@ -364,8 +363,8 @@ def test_sql_tool_node_recovers_from_failed_initial_sql(conn, monkeypatch):
     assert "error" not in finding, f"Attendu finding succès, reçu erreur: {finding.get('error')}"
     assert "rows" in finding
     assert len(finding["rows"]) > 0
-    # iterations incrémenté
-    assert result["iterations"] == initial_iterations + 1
+    # iterations n'est plus retourné par sql_tool_node (possédé par critic, D-06 Phase 4)
+    assert "iterations" not in result
 
 
 def test_validate_sql_rejects_unknown_column(conn):
