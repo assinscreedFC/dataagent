@@ -7,6 +7,7 @@ import pytest
 
 from dataagent.agent.schema_introspect import schema_description
 from dataagent.agent.state import initial_state
+from dataagent.config import SQL_MAX_RETRIES
 
 
 # ---------------------------------------------------------------------------
@@ -28,6 +29,19 @@ class _FakeLLM:
 
     def invoke(self, messages):  # noqa: ANN001
         return _FakeResponse(self._content)
+
+
+class _SequenceLLM:
+    """LLM factice dont .invoke() retourne les contenus en séquence (round-robin sur le dernier)."""
+
+    def __init__(self, contents: list) -> None:
+        self._contents = contents
+        self._index = 0
+
+    def invoke(self, messages):  # noqa: ANN001
+        content = self._contents[min(self._index, len(self._contents) - 1)]
+        self._index += 1
+        return _FakeResponse(content)
 
 
 # ---------------------------------------------------------------------------
@@ -247,3 +261,78 @@ def test_synthesizer_handles_error_findings(conn, monkeypatch):
 
     assert "report" in result
     assert len(result["report"]) > 0
+
+
+# ---------------------------------------------------------------------------
+# Tests sql_tool_node durci — Phase 2 (validation EXPLAIN + retry borné)
+# ---------------------------------------------------------------------------
+
+
+def test_sql_tool_retries_and_corrects(conn, monkeypatch):
+    """Génération initiale invalide puis correcte → finding succès avec attempts == 2."""
+    from dataagent.agent import nodes
+
+    seq_llm = _SequenceLLM(
+        ["SELECT * FROM table_inexistante", "SELECT COUNT(*) AS n FROM orders"]
+    )
+    monkeypatch.setattr(nodes, "flash_llm", lambda: seq_llm)
+
+    state = initial_state("Combien de commandes ?", conn)
+    state["plan"] = ["Combien de commandes au total ?"]
+
+    result = nodes.sql_tool_node(state)
+
+    assert "findings" in result
+    finding = result["findings"][0]
+    assert "error" not in finding, f"Attendu finding succès, reçu erreur: {finding.get('error')}"
+    assert "rows" in finding
+    assert "columns" in finding
+    assert finding.get("attempts") == 2
+
+
+def test_sql_tool_valid_first_try_attempts_one(conn, monkeypatch):
+    """Query valide dès le premier coup → finding succès avec attempts == 1 et format Phase 1."""
+    from dataagent.agent import nodes
+
+    fake_llm = _FakeLLM("SELECT COUNT(*) AS n FROM orders")
+    monkeypatch.setattr(nodes, "flash_llm", lambda: fake_llm)
+
+    state = initial_state("Combien de commandes ?", conn)
+    state["plan"] = ["Combien de commandes au total ?"]
+
+    result = nodes.sql_tool_node(state)
+
+    assert "findings" in result
+    finding = result["findings"][0]
+    # Format Phase 1 préservé
+    assert finding["source"] == "sql_tool"
+    assert "subquestion" in finding
+    assert "sql" in finding
+    assert "tables" in finding
+    assert "rows" in finding
+    assert "columns" in finding
+    # Nouvelle clé Phase 2
+    assert finding.get("attempts") == 1
+
+
+def test_sql_tool_exhausts_retries_pushes_error(conn, monkeypatch):
+    """Toutes les tentatives échouent → finding d'erreur avec attempts == SQL_MAX_RETRIES+1, sans exception."""
+    from dataagent.agent import nodes
+
+    # Toujours une query invalide
+    always_bad = _SequenceLLM(["SELECT * FROM table_inexistante"] * (SQL_MAX_RETRIES + 2))
+    monkeypatch.setattr(nodes, "flash_llm", lambda: always_bad)
+
+    state = initial_state("Question quelconque ?", conn)
+    state["plan"] = ["Sous-question dont SQL échoue toujours ?"]
+
+    # Ne doit pas lever d'exception
+    result = nodes.sql_tool_node(state)
+
+    assert "findings" in result
+    finding = result["findings"][0]
+    assert "error" in finding
+    assert finding["source"] == "sql_tool"
+    assert finding.get("attempts") == SQL_MAX_RETRIES + 1
+    # iterations toujours incrémenté
+    assert result["iterations"] == state["iterations"] + 1
