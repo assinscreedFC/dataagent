@@ -336,3 +336,43 @@ def test_sql_tool_exhausts_retries_pushes_error(conn, monkeypatch):
     assert finding.get("attempts") == SQL_MAX_RETRIES + 1
     # iterations toujours incrémenté
     assert result["iterations"] == state["iterations"] + 1
+
+
+# ---------------------------------------------------------------------------
+# Tests end-to-end node + couverture ≥80% — Phase 2 Task 3
+# ---------------------------------------------------------------------------
+
+
+def test_sql_tool_node_recovers_from_failed_initial_sql(conn, monkeypatch):
+    """sql_tool_node récupère sur SQL initial invalide et produit un finding correct (critère #4)."""
+    from dataagent.agent import nodes
+
+    seq_llm = _SequenceLLM(
+        ["SELECT * FROM commandes_inexistantes", "SELECT COUNT(*) AS n FROM orders"]
+    )
+    monkeypatch.setattr(nodes, "flash_llm", lambda: seq_llm)
+
+    state = initial_state("Combien de commandes ?", conn)
+    state["plan"] = ["Combien de commandes ?"]
+    initial_iterations = state["iterations"]
+
+    result = nodes.sql_tool_node(state)
+
+    assert "findings" in result
+    finding = result["findings"][0]
+    # Pas d'erreur — finding succès malgré SQL initial invalide
+    assert "error" not in finding, f"Attendu finding succès, reçu erreur: {finding.get('error')}"
+    assert "rows" in finding
+    assert len(finding["rows"]) > 0
+    # iterations incrémenté
+    assert result["iterations"] == initial_iterations + 1
+
+
+def test_validate_sql_rejects_unknown_column(conn):
+    """_validate_sql rejette une colonne inexistante via EXPLAIN (critère #1 au niveau colonne)."""
+    from dataagent.agent.nodes import _validate_sql
+
+    result = _validate_sql(conn, "SELECT colonne_bidon FROM orders")
+    assert result is not None
+    assert isinstance(result, str)
+    assert len(result) > 0
