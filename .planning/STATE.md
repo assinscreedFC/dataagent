@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: — Hardening
 status: executing
-stopped_at: Completed 07-hardening-bug-fixes/07-01-PLAN.md
-last_updated: "2026-06-13T18:04:13.303Z"
+stopped_at: Completed 07-hardening-bug-fixes/07-02-PLAN.md
+last_updated: "2026-06-13T18:21:54.943Z"
 last_activity: 2026-06-13
 progress:
   total_phases: 1
   completed_phases: 0
   total_plans: 4
-  completed_plans: 1
-  percent: 25
+  completed_plans: 2
+  percent: 50
 ---
 
 # Project State
@@ -26,7 +26,7 @@ See: .planning/PROJECT.md (updated 2026-06-13)
 ## Current Position
 
 Phase: 7 (Hardening & Bug Fixes) — EXECUTING
-Plan: 2 of 4
+Plan: 3 of 4
 Status: Ready to execute
 Last activity: 2026-06-13
 
@@ -70,6 +70,7 @@ Progress: [░░░░░░░░░░] 0%
 | Phase 06 P06-02 | 12 | 2 tasks | 2 files |
 | Phase 06-eval-api-demo P06-03 | 13 | 1 tasks | 2 files |
 | Phase 07-hardening-bug-fixes P07-01 | 12 | 3 tasks | 5 files |
+| Phase 07 P02 | 20 | 3 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -107,6 +108,11 @@ Recent decisions affecting current work:
 - [Phase 07-01]: D-01/D-02: critic_node bounds next_step + _critic_decision early-exit when plan exhausted; hard cap preserved
 - [Phase 07-01]: D-08: _as_text(response)->str helper after every .invoke() — type-safe, handles multi-part LLM responses
 - [Phase 07-01]: D-10: schema:str in AgentState computed once in run(), propagated via state; sql_tool_node uses fallback
+- [Phase 07-02]: D-04: SQL_FORBIDDEN_KEYWORDS + _is_write_sql word-boundary guard before validate/exec, no retry on write (HARD-03)
+- [Phase 07-02]: D-05: _TABLE_NAME_RE in loader.py skips non-conforming CSV table names with warning (HARD-04)
+- [Phase 07-02]: D-06: max_length=2000 on AskRequest; _filter_findings strips sql/rows/columns by default; ?debug=true opt-in (HARD-05)
+- [Phase 07-02]: D-07: html.escape(png_path, quote=True) in render.py before <img src> injection (HARD-06)
+- [Phase 07-02]: D-12: FastAPI lifespan creates one persistent DuckDB conn; ask() uses getattr fallback None for test compat (HARD-11)
 
 ### Pending Todos
 
@@ -118,6 +124,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-06-13T18:04:13.293Z
-Stopped at: Completed 07-hardening-bug-fixes/07-01-PLAN.md
+Last session: 2026-06-13T18:21:54.932Z
+Stopped at: Completed 07-hardening-bug-fixes/07-02-PLAN.md
 Resume file: None
