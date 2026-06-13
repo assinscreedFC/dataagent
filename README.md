@@ -4,7 +4,7 @@
 
 Tu poses une question (« Quel est le CA par mois ? », « Les retards de livraison plombent-ils les avis ? »), l'agent planifie, query la data, croise les sources, et sort un rapport sourcé avec visualisations. Projet portfolio (Labs SolidScale) — apprentissage **agentic AI + data engineering moderne**.
 
-Stack : **LangGraph v1.0** (`StateGraph` manuel) + **DuckDB** + **Polars** + **Claude** (Haiku planner/critic, Opus synthétiseur).
+Stack : **LangGraph v1.0** (`StateGraph` manuel) + **DuckDB** + **Polars** + **Gemini** (Flash planner/critic, Pro synthétiseur).
 
 > ⚠️ **Statut : en construction.** La couche data (J1) est livrée et testée. L'agent LangGraph (J2+) est en cours — voir [État](#état). Voir [`PLAN.md`](./PLAN.md) pour l'architecture complète et les jalons.
 
@@ -64,7 +64,7 @@ print(delivery_delay_vs_review(conn))     # Délai livraison moyen par score d'a
 - **LangGraph `StateGraph` manuel** (pas `create_react_agent`) : la critic loop impose parallel nodes + router + retry custom.
 - **Connexion DuckDB** dans le state via `UntrackedValue` (transient, jamais checkpointé).
 - **Findings** accumulés via reducer `Annotated[list, add]`.
-- **Garde-fou coût** : `MAX_ITERATIONS` (hard stop de la boucle critic), Haiku pour planner/router/critic, Opus pour la synthèse finale.
+- **Garde-fou coût** : `MAX_ITERATIONS` (hard stop de la boucle critic), Gemini Flash pour planner/router/critic, Gemini Pro pour la synthèse finale.
 - **Resumabilité** : checkpointer SQLite.
 
 Flux : question → planner → query (data layer) → critic loop → synthétiseur → rapport sourcé + graphes.

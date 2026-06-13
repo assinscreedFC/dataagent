@@ -22,6 +22,7 @@ Une question business en langage naturel produit un rapport correct, sourcé et 
 
 <!-- Scope en construction — jalons J2 à J4 du PLAN. Hypothèses jusqu'à livraison. -->
 
+- [ ] Couche LLM via `langchain-google-genai` (Gemini) : Flash pour planner/router/critic, Pro pour synthesizer
 - [ ] StateGraph LangGraph v1.0 : boucle planner → sql_tool → synthesizer end-to-end (J2)
 - [ ] Garde-fou coût `max_iterations` câblé dans le state dès J2
 - [ ] `python -m dataagent "CA total 2017 ?"` retourne une réponse correcte (J2)
@@ -38,13 +39,13 @@ Une question business en langage naturel produit un rapport correct, sourcé et 
 
 - `create_react_agent` — StateGraph manuel requis (parallel nodes, supervisor, critic loop, branching custom)
 - Dataset autre qu'Olist — Olist suffit (réel, multi-tables, riche en questions business)
-- LLM autre que Claude — Haiku (planner/router/critic) + Opus (synthesizer) figés
+- Provider LLM hors Gemini — pas de clé Anthropic dispo ; Gemini retenu (free tier solide), Groq/GitHub Models en réserve
 - `config_schema` LangGraph — déprécié, retiré en v2.0 ; utiliser `context_schema`
 
 ## Context
 
 - Repo privé, séparé du portfolio.
-- Stack : LangGraph v1.0 (stable oct 2025) + DuckDB + Polars + Claude.
+- Stack : LangGraph v1.0 (stable oct 2025) + DuckDB + Polars + Gemini (via langchain-google-genai).
 - Dataset Olist e-commerce (Kaggle `olistbr/brazilian-ecommerce`, 9 tables, ~100k commandes), CSV dans `data/raw/`.
 - Findings LangGraph v1.0 vérifiés juin 2026 (voir PLAN.md) : `StateGraph.compile()` obligatoire, connexion DuckDB en `UntrackedValue` (transient, jamais checkpointée), findings accumulés via `ReducedValue`/`Annotated[list, add]`, config run-scoped via `context_schema`, router avec type hints + `path_map` obligatoire, resumabilité via `checkpointer` SqliteSaver.
 - État actuel : couche data J1 livrée et testée (modules `src/dataagent/data/loader.py` + `queries.py`, tests `tests/test_loader.py` + `test_queries.py`).
@@ -53,7 +54,7 @@ Une question business en langage naturel produit un rapport correct, sourcé et 
 
 - **Tech stack**: LangGraph v1.0, `StateGraph` manuel — la doc recommande le StateGraph manuel dès qu'on a parallel nodes/supervisor/retry custom/branching ; la critic loop coche tout.
 - **Tech stack**: DuckDB + Polars pour query/transform, plotly + kaleido pour viz, FastAPI + uvicorn pour l'API.
-- **LLM**: Claude uniquement — Haiku (planner/router/critic, cheap+rapide), Opus (synthesizer, qualité rapport).
+- **LLM**: Gemini via `langchain-google-genai` — Flash (planner/router/critic, cheap+rapide), Pro (synthesizer, qualité rapport). Clés Groq + GitHub Models en réserve si quota Gemini insuffisant.
 - **Coût**: `max_iterations` hard stop dans le state dès J2 — empêche boucle critic infinie.
 - **Tests**: vraie I/O DuckDB sur fixtures synthétiques, jamais de mock I/O ; pytest + dataset 10 Q/R pour l'eval.
 
@@ -65,7 +66,8 @@ Une question business en langage naturel produit un rapport correct, sourcé et 
 | Connexion DuckDB en `UntrackedValue` | State transient, jamais checkpointé | — Pending |
 | `max_iterations` câblé dès J2 | Garde-fou coût, hard stop boucle critic | — Pending |
 | Router type-hinté + `path_map` | Évite le misroute silencieux | — Pending |
-| Haiku planner/critic, Opus synthesizer | Cheap sur la boucle, qualité sur le rapport final | — Pending |
+| Gemini Flash planner/critic, Gemini Pro synthesizer | Cheap sur la boucle, qualité sur le rapport final ; seul provider avec clé dispo | — Pending |
+| Provider Gemini (vs Claude figé au PLAN initial) | Pas de clé Anthropic ; Gemini free tier solide, Groq/GitHub en réserve | — Pending |
 
 ## Evolution
 

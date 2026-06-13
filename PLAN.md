@@ -9,7 +9,7 @@ Projet portfolio (Labs SolidScale) à but d'apprentissage : **agentic AI + data 
 - Repo privé, séparé du portfolio.
 - **LangGraph v1.0** (stable oct 2025), `StateGraph` manuel — pas `create_react_agent`. Justification : la doc recommande le StateGraph manuel dès qu'on a parallel nodes, supervisor, retry custom ou branching complexe ; notre critic loop coche tout.
 - **Dataset** : Olist e-commerce (Kaggle, 9 tables, ~100k commandes). Réel, multi-tables, riche en questions business.
-- **LLM** : Claude. Haiku → planner/router/critic (cheap, rapide). Opus → synthesizer (qualité rapport).
+- **LLM** : Gemini (via `langchain-google-genai`). Flash → planner/router/critic (cheap, rapide). Pro → synthesizer (qualité rapport). _(Décision révisée 2026-06-13 : pas de clé Anthropic dispo ; Gemini free tier retenu, Groq + GitHub Models en réserve. Claude était figé au plan initial.)_
 - **Garde-fou coût** : `max_iterations` dans le state dès J2. Hard stop boucle critic.
 
 ## Findings LangGraph v1.0 (vérifiés juin 2026)
@@ -47,20 +47,20 @@ START -> planner -> router -+-> sql_tool ---+
                             +-> viz_tool ---+                     +-> synthesizer -> END
 ```
 
-- **planner** (Haiku) : décompose la question -> `plan[]`
+- **planner** (Gemini Flash) : décompose la question -> `plan[]`
 - **router** (conditional edge, type-hinté + path_map) : choisit le tool selon la sous-question courante
 - **sql_tool** : génère SQL, valide sur le schema DuckDB, exécute, push findings
 - **stats_tool** : Polars (corrélation, agrégats, détection anomalie)
 - **viz_tool** : plotly -> PNG sauvé, chemin dans findings
-- **critic** (Haiku) : findings suffisants ? reboucle ou synth. Incrémente `iterations`.
-- **synthesizer** (Opus) : rapport markdown sourcé + graphes
+- **critic** (Gemini Flash) : findings suffisants ? reboucle ou synth. Incrémente `iterations`.
+- **synthesizer** (Gemini Pro) : rapport markdown sourcé + graphes
 
 ## Stack
 
 | Couche | Lib | Version cible |
 |--------|-----|---------------|
 | Agent | langgraph | ^1.0 |
-| LLM | langchain-anthropic | latest |
+| LLM | langchain-google-genai | latest |
 | Query | duckdb | latest |
 | Transform | polars | latest |
 | Viz | plotly + kaleido | latest |
