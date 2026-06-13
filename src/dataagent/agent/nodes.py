@@ -231,24 +231,72 @@ def sql_tool_node(state: AgentState) -> dict:
 
 
 def _serialize_findings(findings: list[dict]) -> str:
-    """Sérialise les findings en texte structuré pour le prompt Pro."""
+    """Sérialise les findings en texte structuré pour le prompt Pro.
+
+    Gère les 3 sources analytiques : sql_tool, stats_tool, viz_tool.
+    Les findings source="critic" sont résumés (pas présentés comme données analytiques).
+    """
     if not findings:
         return "(aucun finding disponible)"
 
     parts: list[str] = []
-    for i, f in enumerate(findings, 1):
-        lines = [f"Finding {i}:"]
-        lines.append(f"  Sous-question : {f.get('subquestion', '?')}")
-        lines.append(f"  SQL : {f.get('sql', '?')}")
-        if "error" in f:
-            lines.append(f"  ERREUR : {f['error']}")
+    finding_num = 0
+    for f in findings:
+        source = f.get("source", "unknown")
+
+        # Findings critic : résumé court, non numéroté comme données analytiques
+        if source == "critic":
+            sufficient_label = "SUFFISANT" if f.get("sufficient") else "INSUFFISANT"
+            parts.append(f"[Critic itération {f.get('iteration', '?')} : {sufficient_label}]")
+            continue
+
+        finding_num += 1
+        lines = [f"Finding {finding_num} (source: {source}):"]
+
+        if source == "sql_tool":
+            lines.append(f"  Sous-question : {f.get('subquestion', '?')}")
+            lines.append(f"  SQL : {f.get('sql', '?')}")
+            if "error" in f:
+                lines.append(f"  ERREUR : {f['error']}")
+            else:
+                tables = f.get("tables", [])
+                rows = f.get("rows", [])
+                cols = f.get("columns", [])
+                lines.append(f"  Tables : {', '.join(tables) if tables else '?'}")
+                lines.append(f"  Colonnes : {', '.join(cols)}")
+                lines.append(f"  Résultats ({len(rows)} lignes) : {rows[:10]}")
+
+        elif source == "stats_tool":
+            analysis = f.get("analysis", "?")
+            lines.append(f"  Analyse : {analysis}")
+            if analysis == "correlation":
+                cols = f.get("columns", [])
+                value = f.get("value")
+                lines.append(f"  Colonnes corrélées : {', '.join(cols)}")
+                lines.append(f"  Corrélation de Pearson : {value}")
+            elif analysis == "anomaly":
+                lines.append(f"  Colonne : {f.get('column', '?')}")
+                lines.append(f"  Anomalies détectées : {f.get('anomalies', [])}")
+            elif analysis == "insufficient_data":
+                lines.append(f"  Détail : {f.get('detail', '?')}")
+            else:
+                lines.append(f"  Valeur : {f.get('value', '?')}")
+
+        elif source == "viz_tool":
+            if "skipped" in f:
+                lines.append(f"  Visualisation : ignorée ({f['skipped']})")
+            else:
+                lines.append(f"  Sous-question : {f.get('subquestion', '?')}")
+                png_path = f.get("png_path")
+                if png_path:
+                    lines.append(f"  Graphique PNG généré : {png_path}")
+                    lines.append(f"  [INCLURE dans le rapport : ![graphe]({png_path})]")
+                lines.append(f"  Type : {f.get('chart', '?')}")
+
         else:
-            tables = f.get("tables", [])
-            rows = f.get("rows", [])
-            cols = f.get("columns", [])
-            lines.append(f"  Tables : {', '.join(tables) if tables else '?'}")
-            lines.append(f"  Colonnes : {', '.join(cols)}")
-            lines.append(f"  Résultats ({len(rows)} lignes) : {rows[:10]}")
+            # Source inconnue : dump brut
+            lines.append(f"  Données : {f}")
+
         parts.append("\n".join(lines))
 
     return "\n\n".join(parts)
@@ -534,10 +582,12 @@ def synthesizer_node(state: AgentState) -> dict:
     findings_text = _serialize_findings(findings)
 
     system_msg = (
-        "Tu es analyste data. À partir de ces findings, rédige un rapport markdown "
-        "concis qui répond à la question. "
+        "Tu es analyste data. À partir de ces findings (sql_tool, stats_tool, viz_tool), "
+        "rédige un rapport markdown concis qui répond à la question en croisant toutes les sources.\n"
         "CITE explicitement tes sources : pour chaque chiffre, indique la/les table(s) "
-        "et la query SQL utilisées."
+        "et la query SQL utilisées.\n"
+        "IMPORTANT : si un finding viz_tool indique un graphique PNG (png_path), "
+        "INCLUS obligatoirement une image markdown `![graphe](png_path)` dans le rapport."
     )
     human_msg = (
         f"Question : {question}\n\nFindings :\n{findings_text}"
