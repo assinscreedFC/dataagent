@@ -447,3 +447,181 @@ class TestSynthesizerMultiSource:
         result = nodes.synthesizer_node(state)
         assert result["report"]
         assert "order_items" in result["report"]
+
+
+# ---------------------------------------------------------------------------
+# Tests D-01/D-02 borne current_step + early-exit critic (07-04)
+# ---------------------------------------------------------------------------
+
+
+class TestCurrentStepBound:
+    """D-01 : borne current_step dans critic_node."""
+
+    def test_bound_single_item_plan(self, monkeypatch):
+        """Plan d'1 sous-question : min(0+1, 0) = 0 → current_step reste à 0."""
+        monkeypatch.setattr(nodes, "flash_llm", lambda: _FakeLLM("SUFFISANT"))
+        state = _make_state(plan=["Q1 ?"], current_step=0)
+        result = nodes.critic_node(state)
+        # D-01 : min(0+1, len(["Q1 ?"])-1) = min(1, 0) = 0
+        assert result["current_step"] == 0
+
+    def test_bound_two_item_plan_step_zero(self, monkeypatch):
+        """Plan de 2 sous-questions, step=0 → min(1, 1) = 1."""
+        monkeypatch.setattr(nodes, "flash_llm", lambda: _FakeLLM("SUFFISANT"))
+        state = _make_state(plan=["Q1 ?", "Q2 ?"], current_step=0)
+        result = nodes.critic_node(state)
+        # D-01 : min(0+1, len(["Q1 ?","Q2 ?"])-1) = min(1, 1) = 1
+        assert result["current_step"] == 1
+
+    def test_bound_prevents_overflow_at_last_step(self, monkeypatch):
+        """Plan de 3 sous-questions, step=2 (dernier) : min(3, 2) = 2 — pas de débordement."""
+        monkeypatch.setattr(nodes, "flash_llm", lambda: _FakeLLM("SUFFISANT"))
+        state = _make_state(plan=["Q1 ?", "Q2 ?", "Q3 ?"], current_step=2)
+        result = nodes.critic_node(state)
+        # D-01 borne : min(2+1, 3-1) = min(3, 2) = 2
+        assert result["current_step"] == 2
+
+
+# ---------------------------------------------------------------------------
+# Tests D-02 early-exit critic (07-04)
+# ---------------------------------------------------------------------------
+
+
+class TestCriticEarlyExit:
+    """D-02 : _critic_decision early-exit quand current_step >= len(plan)."""
+
+    def test_early_exit_when_step_equals_len_plan(self):
+        """current_step == len(plan) → 'synthesizer' (early-exit D-02)."""
+        from dataagent.agent.graph import _critic_decision
+
+        state = {
+            "iterations": 1,
+            "max_iterations": 5,
+            "plan": ["Q1 ?"],
+            "current_step": 1,  # >= len(["Q1 ?"]) = 1 → early-exit
+            "findings": [{"source": "critic", "sufficient": False, "iteration": 1}],
+        }
+        result = _critic_decision(state)
+        assert result == "synthesizer", f"D-02 early-exit attendu, got {result}"
+
+    def test_early_exit_when_step_exceeds_len_plan(self):
+        """current_step > len(plan) → 'synthesizer' (early-exit D-02)."""
+        from dataagent.agent.graph import _critic_decision
+
+        state = {
+            "iterations": 2,
+            "max_iterations": 5,
+            "plan": ["Q1 ?", "Q2 ?"],
+            "current_step": 5,  # >> len(plan) → early-exit
+            "findings": [{"source": "critic", "sufficient": False, "iteration": 2}],
+        }
+        result = _critic_decision(state)
+        assert result == "synthesizer", f"D-02 early-exit attendu, got {result}"
+
+    def test_no_early_exit_when_step_below_len_plan(self):
+        """current_step < len(plan) → pas d'early-exit → verdict critic consulté."""
+        from dataagent.agent.graph import _critic_decision
+
+        state = {
+            "iterations": 1,
+            "max_iterations": 5,
+            "plan": ["Q1 ?", "Q2 ?"],
+            "current_step": 0,  # < len(["Q1 ?","Q2 ?"]) = 2 → pas d'early-exit
+            "findings": [{"source": "critic", "sufficient": True, "iteration": 1}],
+        }
+        result = _critic_decision(state)
+        assert result == "synthesizer", f"Verdict critic sufficient=True attendu, got {result}"
+
+
+# ---------------------------------------------------------------------------
+# Test D-03 : résumé contenu critic (07-04)
+# ---------------------------------------------------------------------------
+
+
+class TestCriticContentSummaryInPrompt:
+    """D-03 : _summarize_findings_for_critic est injecté dans le prompt critic."""
+
+    def test_summarize_findings_for_critic_sql_source(self):
+        """_summarize_findings_for_critic inclut subquestion et rows[:2] pour sql_tool."""
+        from dataagent.agent.nodes import _summarize_findings_for_critic
+
+        finding = {
+            "source": "sql_tool",
+            "subquestion": "CA total 2017 ?",
+            "rows": [(380.0,), (200.0,)],
+            "columns": ["total_ca"],
+        }
+        summary = _summarize_findings_for_critic([finding])
+        assert "CA total 2017 ?" in summary
+        assert "380.0" in summary or "rows" in summary.lower()
+
+    def test_summarize_findings_for_critic_viz_source(self):
+        """_summarize_findings_for_critic inclut png_path pour viz_tool."""
+        from dataagent.agent.nodes import _summarize_findings_for_critic
+
+        finding = {
+            "source": "viz_tool",
+            "subquestion": "Chart ventes",
+            "png_path": "/tmp/chart.png",
+        }
+        summary = _summarize_findings_for_critic([finding])
+        assert "/tmp/chart.png" in summary or "viz" in summary.lower()
+
+    def test_summarize_findings_caps_at_1500_chars(self):
+        """_summarize_findings_for_critic tronque le résumé à 1500 chars."""
+        from dataagent.agent.nodes import _summarize_findings_for_critic
+
+        # Beaucoup de findings pour dépasser 1500 chars
+        findings = [
+            {
+                "source": "sql_tool",
+                "subquestion": f"Question très longue numéro {i} qui dépasse le cap ?",
+                "rows": [(i * 100.0,)] * 5,
+                "columns": ["valeur"],
+            }
+            for i in range(50)
+        ]
+        summary = _summarize_findings_for_critic(findings)
+        assert len(summary) <= 1500
+
+    def test_critic_node_human_msg_contains_findings_summary(self, monkeypatch):
+        """critic_node : le human_msg envoyé au LLM contient la sous-question du finding."""
+        captured_messages: list = []
+
+        class _CapturingLLM:
+            def invoke(self, messages):  # noqa: ANN001
+                captured_messages.extend(messages)
+
+                class _R:
+                    content = "SUFFISANT"
+
+                return _R()
+
+        monkeypatch.setattr(nodes, "flash_llm", lambda: _CapturingLLM())
+
+        import duckdb
+        state = _make_state(
+            plan=["CA total 2017 ?"],
+            current_step=0,
+            findings=[
+                {
+                    "source": "sql_tool",
+                    "subquestion": "CA total 2017 ?",
+                    "sql": "SELECT SUM(price) FROM order_items",
+                    "rows": [(380.0,)],
+                    "columns": ["total_ca"],
+                    "attempts": 1,
+                }
+            ],
+            conn=duckdb.connect(),
+        )
+        nodes.critic_node(state)
+
+        assert captured_messages, "Aucun message capturé par le LLM"
+        all_text = " ".join(
+            str(m[1]) if isinstance(m, (list, tuple)) and len(m) >= 2 else str(m)
+            for m in captured_messages
+        )
+        assert "CA total 2017 ?" in all_text, (
+            f"Sous-question absente du prompt critic: {all_text[:400]}"
+        )

@@ -291,10 +291,42 @@ class TestHardCap:
         state = {
             "iterations": 1,
             "max_iterations": 5,
+            "plan": ["Q1 ?", "Q2 ?"],
+            "current_step": 0,
             "findings": [{"source": "critic", "sufficient": True, "iteration": 1}],
         }
         result = _critic_decision(state)
         assert result == "synthesizer", f"Attendu synthesizer, got {result}"
+
+    def test_critic_decision_hard_cap_takes_precedence_over_early_exit(self):
+        """Hard cap (iterations >= max) prend precedence sur tout — même si current_step < len(plan).
+
+        D-02 : l'early-exit est évalué APRÈS le hard cap dans _critic_decision.
+        Ce test prouve que le hard cap reste fonctionnel indépendamment de D-02.
+        """
+        state = {
+            "iterations": 5,
+            "max_iterations": 5,
+            "plan": ["Q1 ?", "Q2 ?", "Q3 ?"],
+            "current_step": 1,  # < len(plan)=3 → pas d'early-exit D-02
+            "findings": [{"source": "critic", "sufficient": False, "iteration": 5}],
+        }
+        result = _critic_decision(state)
+        assert result == "synthesizer", (
+            f"Hard cap doit retourner 'synthesizer' même si current_step < len(plan), got {result}"
+        )
+
+    def test_critic_decision_early_exit_d02_when_plan_exhausted(self):
+        """_critic_decision retourne 'synthesizer' via early-exit D-02 quand current_step >= len(plan)."""
+        state = {
+            "iterations": 2,
+            "max_iterations": 5,
+            "plan": ["Q1 ?"],
+            "current_step": 1,  # >= len(["Q1 ?"]) = 1 → early-exit D-02
+            "findings": [{"source": "critic", "sufficient": False, "iteration": 2}],
+        }
+        result = _critic_decision(state)
+        assert result == "synthesizer", f"Early-exit D-02 attendu, got {result}"
 
     def test_critic_decision_no_findings_reloops(self):
         """_critic_decision retourne 'router' si aucun finding critic (premier passage).
