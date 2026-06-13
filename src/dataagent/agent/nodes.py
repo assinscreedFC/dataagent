@@ -24,6 +24,103 @@ logger = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
+# _as_text helper (per D-08 HARD-07)
+# ---------------------------------------------------------------------------
+
+
+def _as_text(response) -> str:  # noqa: ANN001
+    """Extrait le texte d'une réponse LLM de façon sûre (per D-08 HARD-07).
+
+    Garantit un str en toutes circonstances :
+    - response.content est str → le retourner tel quel
+    - response.content est list (multi-part) → concaténer les parts texte
+      (dict avec clé "text", ou str(part) sinon)
+    - response.content autre type → str(content)
+
+    Corrige les 5 erreurs mypy liées à .content non typé, évite crash
+    sur réponse LLM multi-part.
+    """
+    content = response.content
+    if isinstance(content, str):
+        return content
+    if isinstance(content, list):
+        parts: list[str] = []
+        for p in content:
+            if isinstance(p, dict):
+                parts.append(p.get("text", ""))
+            else:
+                parts.append(str(p))
+        return "".join(parts)
+    return str(content)
+
+
+# ---------------------------------------------------------------------------
+# _summarize_findings_for_critic helper (per D-03 HARD-02)
+# ---------------------------------------------------------------------------
+
+
+def _summarize_findings_for_critic(findings: list[dict]) -> str:
+    """Résume le contenu des findings pour le prompt critic (per D-03 HARD-02).
+
+    Pour chaque finding non-critic, une ligne courte selon la source :
+    - sql_tool : subquestion + rows[:2] (ou error)
+    - stats_tool : analysis + columns/value/anomalies
+    - viz_tool : png_path généré ou skipped
+
+    Cappé à 1500 chars (suffixe "…" si tronqué).
+    Findings vides → "(aucun finding)".
+    """
+    _CAP = 1500
+
+    if not findings:
+        return "(aucun finding)"
+
+    lines: list[str] = []
+    for f in findings:
+        source = f.get("source", "?")
+        if source == "critic":
+            continue
+
+        if source == "sql_tool":
+            subq = f.get("subquestion", "?")
+            if "error" in f:
+                lines.append(f"[sql] {subq} → ERREUR: {f['error'][:80]}")
+            else:
+                rows_sample = f.get("rows", [])[:2]
+                lines.append(f"[sql] {subq} → rows[:2]={rows_sample}")
+
+        elif source == "stats_tool":
+            analysis = f.get("analysis", "?")
+            if analysis == "correlation":
+                cols = f.get("columns", [])
+                val = f.get("value")
+                lines.append(f"[stats] corrélation {cols}: {val}")
+            elif analysis == "anomaly":
+                col = f.get("column", "?")
+                anomalies = f.get("anomalies", [])
+                lines.append(f"[stats] anomalies col={col}: {anomalies[:3]}")
+            elif analysis == "insufficient_data":
+                lines.append(f"[stats] données insuffisantes: {f.get('detail', '?')[:80]}")
+            else:
+                lines.append(f"[stats] {analysis}: {f.get('value', '?')}")
+
+        elif source == "viz_tool":
+            if "skipped" in f:
+                lines.append(f"[viz] skipped: {f['skipped']}")
+            else:
+                png = f.get("png_path", "?")
+                lines.append(f"[viz] png généré: {png}")
+
+        else:
+            lines.append(f"[{source}] {str(f)[:80]}")
+
+    summary = "\n".join(lines)
+    if len(summary) > _CAP:
+        summary = summary[:_CAP - 1] + "…"
+    return summary
+
+
+# ---------------------------------------------------------------------------
 # planner_node
 # ---------------------------------------------------------------------------
 
@@ -40,7 +137,7 @@ def planner_node(state: AgentState) -> dict:
         "précises, une par ligne, sans numérotation."
     )
     response = flash_llm().invoke([("system", system_msg), ("human", question)])
-    raw: str = response.content
+    raw: str = _as_text(response)  # per D-08 (HARD-07)
 
     # Parse les lignes non vides
     plan = [line.strip() for line in raw.splitlines() if line.strip()]
@@ -112,7 +209,7 @@ def _generate_sql(schema: str, subquestion: str) -> str:
         "Réponds avec le SQL brut uniquement, sans markdown."
     )
     response = flash_llm().invoke([("system", system_msg), ("human", subquestion)])
-    return _clean_sql(response.content)
+    return _clean_sql(_as_text(response))  # per D-08 (HARD-07)
 
 
 def _regenerate_sql(schema: str, subquestion: str, bad_sql: str, error: str) -> str:
@@ -125,7 +222,7 @@ def _regenerate_sql(schema: str, subquestion: str, bad_sql: str, error: str) -> 
         "SQL brut uniquement."
     )
     response = flash_llm().invoke([("system", system_msg), ("human", subquestion)])
-    return _clean_sql(response.content)
+    return _clean_sql(_as_text(response))  # per D-08 (HARD-07)
 
 
 def _execute_subquestion(
@@ -211,7 +308,9 @@ def sql_tool_node(state: AgentState) -> dict:
     Retourne {"findings": [...]}.
     """
     conn: duckdb.DuckDBPyConnection = state["db"]
-    schema = schema_description(conn)
+    # per D-10 (HARD-09) : lire schema depuis le state (introspecté une fois dans run()).
+    # Fallback schema_description(conn) si vide — préserve les tests node-level isolés.
+    schema = state.get("schema") or schema_description(conn)
     plan: list[str] = state.get("plan") or [state["question"]]
     current_step: int = state.get("current_step", 0)
 
@@ -338,8 +437,12 @@ def stats_tool_node(state: AgentState) -> dict:
         # Reconstruire un DataFrame Polars (guard: try/except si rows mal formées)
         try:
             df = pl.DataFrame(rows, schema=columns, orient="row")
-        except Exception:  # noqa: BLE001
-            logger.warning("stats_tool_node: impossible de reconstruire DataFrame depuis finding")
+        except Exception as exc:  # noqa: BLE001
+            logger.warning(
+                "stats_tool_node: impossible de reconstruire DataFrame depuis finding — %s",
+                exc,
+                exc_info=True,  # per D-09 (HARD-08)
+            )
             continue
 
         if df.height < 2:
@@ -419,8 +522,12 @@ def viz_tool_node(state: AgentState) -> dict:
         try:
             import polars as pl
             df = pl.DataFrame(rows, schema=columns, orient="row")
-        except Exception:  # noqa: BLE001
-            logger.warning("viz_tool_node: impossible de reconstruire DataFrame depuis finding")
+        except Exception as exc:  # noqa: BLE001
+            logger.warning(
+                "viz_tool_node: impossible de reconstruire DataFrame depuis finding — %s",
+                exc,
+                exc_info=True,  # per D-09 (HARD-08)
+            )
             continue
 
         numeric_cols = [c for c in df.columns if df[c].dtype.is_numeric()]
@@ -442,8 +549,13 @@ def viz_tool_node(state: AgentState) -> dict:
                 "png_path": str(png_path),
                 "chart": "auto",
             })
-        except Exception:  # noqa: BLE001
-            logger.warning("viz_tool_node: échec render_chart pour finding %r", f.get("subquestion"))
+        except Exception as exc:  # noqa: BLE001
+            logger.warning(
+                "viz_tool_node: échec render_chart pour finding %r — %s",
+                f.get("subquestion"),
+                exc,
+                exc_info=True,  # per D-09 (HARD-08)
+            )
             continue
 
         # Un seul graphique par appel (premier finding visualisable suffisant)
@@ -527,11 +639,13 @@ def critic_node(state: AgentState) -> dict:
     current_iter = state["iterations"]
     current_step = state.get("current_step", 0)
 
-    # Résumé court des findings pour le prompt (éviter un prompt trop long)
-    findings_summary = f"{len(findings)} finding(s) accumulé(s)"
-    if findings:
-        sources = {f.get("source", "?") for f in findings}
-        findings_summary += f" — sources : {', '.join(sorted(sources))}"
+    # Résumé CONTENU des findings pour le prompt critic (per D-03 HARD-02)
+    # Ligne d'en-tête + détail contenu via helper
+    n_findings = len(findings)
+    sources = {f.get("source", "?") for f in findings}
+    header = f"{n_findings} finding(s) — sources: {', '.join(sorted(sources))}"
+    findings_content = _summarize_findings_for_critic(findings)
+    findings_summary = f"{header}\n\n{findings_content}"
 
     system_msg = (
         "Tu es un critic data analyst. "
@@ -546,7 +660,7 @@ def critic_node(state: AgentState) -> dict:
     )
 
     response = flash_llm().invoke([("system", system_msg), ("human", human_msg)])
-    raw: str = response.content.strip()
+    raw: str = _as_text(response).strip()  # per D-08 (HARD-07)
 
     # Parse insensible à la casse — défaut INSUFFISANT si hors attendu (sécurité)
     # NB: tester "insuffisant" avant "suffisant" pour éviter faux positif (sous-chaîne)
@@ -565,10 +679,15 @@ def critic_node(state: AgentState) -> dict:
         "iteration": new_iterations,
     }
 
+    # Borne D-01 (HARD-01) : next_step = min(current_step+1, len(plan)-1) si plan, sinon 0
+    # Empêche current_step de dépasser l'index valide du plan
+    plan: list[str] = state.get("plan") or []
+    next_step = min(current_step + 1, len(plan) - 1) if plan else 0
+
     return {
         "findings": [critic_finding],
         "iterations": new_iterations,
-        "current_step": current_step + 1,
+        "current_step": next_step,
     }
 
 
@@ -597,6 +716,6 @@ def synthesizer_node(state: AgentState) -> dict:
     )
 
     response = pro_llm().invoke([("system", system_msg), ("human", human_msg)])
-    report: str = response.content
+    report: str = _as_text(response)  # per D-08 (HARD-07)
 
     return {"report": report}

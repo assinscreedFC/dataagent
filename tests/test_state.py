@@ -22,12 +22,23 @@ _EXPECTED_FIELDS = {
     "current_step",
     "db",
     "report",
+    "schema",  # per D-10 (HARD-09) — introspecté une fois par run
 }
 
 
-def test_agent_state_has_exactly_9_fields() -> None:
-    """AgentState porte exactement les 9 champs définis en D-01 + current_step (Phase 4)."""
+def test_agent_state_has_exactly_10_fields() -> None:
+    """AgentState porte exactement les 10 champs (9 existants + schema per D-10 HARD-09)."""
     assert set(AgentState.__annotations__) == _EXPECTED_FIELDS
+
+
+def test_initial_state_has_schema_field() -> None:
+    """initial_state() inclut le champ schema (str, défaut '')."""
+    import duckdb
+    conn = duckdb.connect()
+    state = initial_state("Q?", conn)
+    assert "schema" in state
+    assert state["schema"] == ""
+    conn.close()
 
 
 def test_db_field_is_untracked() -> None:

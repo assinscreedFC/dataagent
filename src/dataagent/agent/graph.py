@@ -21,6 +21,7 @@ from dataagent.agent.nodes import (
     synthesizer_node,
     viz_tool_node,
 )
+from dataagent.agent.schema_introspect import schema_description
 from dataagent.agent.state import AgentState, initial_state
 from dataagent.config import CHECKPOINT_DB, DATA_RAW
 from dataagent.data.loader import connect, load_csvs_to_duckdb
@@ -105,8 +106,15 @@ def _critic_decision(state: AgentState) -> Literal["router", "synthesizer"]:
     iterations: int = state.get("iterations", 0)
     max_iterations: int = state.get("max_iterations", 5)
 
-    # Hard cap : arrêt inconditionnel à max_iterations (TOOL-06)
+    # Hard cap : arrêt inconditionnel à max_iterations (TOOL-06) — RESTE en place
     if iterations >= max_iterations:
+        return "synthesizer"
+
+    # Early-exit D-02 (HARD-01) : termine dès que toutes les sous-questions sont traitées,
+    # en plus du hard cap existant. Évite de re-run la dernière sous-question en boucle.
+    current_step: int = state.get("current_step", 0)
+    plan: list[str] = state.get("plan", [])
+    if current_step >= len(plan):
         return "synthesizer"
 
     # Lire le dernier verdict du critic
@@ -227,9 +235,13 @@ def run(question: str, conn=None, thread_id: str | None = None) -> dict:
         conn = connect()
         load_csvs_to_duckdb(conn, DATA_RAW)
 
+    # Introspection du schéma une seule fois par run (per D-10 HARD-09).
+    # Élimine ~150 queries/run (schema_description appelé dans chaque sql_tool_node sinon).
+    schema = schema_description(conn)
+
     if thread_id is None:
         # Run éphémère : comportement Phase 4 intact (D-03)
-        state = initial_state(question, conn)
+        state = initial_state(question, conn, schema=schema)
         app = build_graph()
         return app.invoke(state)
 
@@ -248,7 +260,7 @@ def run(question: str, conn=None, thread_id: str | None = None) -> dict:
         checkpointer = _FilteredSqliteSaver(saver_conn)
         app = build_graph(checkpointer=checkpointer)
         config = {"configurable": {"thread_id": thread_id}}
-        state = initial_state(question, conn)
+        state = initial_state(question, conn, schema=schema)
         return app.invoke(state, config=config)
     finally:
         saver_conn.close()
