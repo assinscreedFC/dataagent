@@ -6,6 +6,11 @@ reports/*.png
 reports/*.html
 *.duckdb
 
+# Checkpointer LangGraph (resumabilité, J3)
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+
 # Python
 __pycache__/
 *.py[cod]
