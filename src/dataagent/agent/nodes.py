@@ -16,6 +16,7 @@ from dataagent.agent.llm import flash_llm, pro_llm
 from dataagent.agent.schema_introspect import schema_description
 from dataagent.agent.state import AgentState
 from dataagent.agent.stats import correlation, detect_anomalies
+from dataagent.agent.viz import render_chart
 from dataagent.config import SQL_MAX_RETRIES
 
 logger = logging.getLogger(__name__)
@@ -328,6 +329,79 @@ def stats_tool_node(state: AgentState) -> dict:
             "detail": "<2 points numériques exploitables ou colonnes non numériques",
         })
 
+    return {"findings": new_findings}
+
+
+# ---------------------------------------------------------------------------
+# viz_tool_node
+# ---------------------------------------------------------------------------
+
+
+def viz_tool_node(state: AgentState) -> dict:
+    """Génère un graphique plotly depuis le premier finding sql_tool visualisable.
+
+    Consomme les findings existants (source sql_tool), identifie le premier avec
+    ≥2 lignes + au moins une colonne numérique, et produit un PNG via render_chart.
+
+    Données non visualisables → finding {"source": "viz_tool", "skipped": ...} (D-05).
+    Pas d'appel LLM, pas d'incrément iterations (router/critic gère ça en Phase 4).
+
+    Retourne {"findings": [...]}, appendé via reducer add.
+    """
+    existing_findings: list[dict] = state.get("findings", [])
+    new_findings: list[dict] = []
+
+    for f in existing_findings:
+        # Ignorer les findings en erreur ou sans rows/columns
+        if "error" in f or "rows" not in f or "columns" not in f:
+            continue
+
+        rows: list = f["rows"]
+        columns: list[str] = f["columns"]
+
+        # Besoin d'au moins 2 lignes pour un graphique utile (D-05)
+        if len(rows) < 2:
+            continue
+
+        # Identifier les colonnes numériques pour l'axe Y
+        try:
+            import polars as pl
+            df = pl.DataFrame(rows, schema=columns, orient="row")
+        except Exception:  # noqa: BLE001
+            logger.warning("viz_tool_node: impossible de reconstruire DataFrame depuis finding")
+            continue
+
+        numeric_cols = [c for c in df.columns if df[c].dtype.is_numeric()]
+        if not numeric_cols:
+            continue
+
+        # Premier finding visualisable : x = 1ère colonne, y = 1ère col numérique
+        x_col = columns[0]
+        y_col = numeric_cols[0]
+
+        try:
+            x = df[x_col].to_list()
+            y = df[y_col].to_list()
+            subquestion: str = f.get("subquestion", "chart")
+            png_path = render_chart(x, y, name=subquestion)
+            new_findings.append({
+                "source": "viz_tool",
+                "subquestion": subquestion,
+                "png_path": str(png_path),
+                "chart": "auto",
+            })
+        except Exception:  # noqa: BLE001
+            logger.warning("viz_tool_node: échec render_chart pour finding %r", f.get("subquestion"))
+            continue
+
+        # Un seul graphique par appel (premier finding visualisable suffisant)
+        return {"findings": new_findings}
+
+    # Aucun finding visualisable trouvé → skipped, pas de crash (D-05)
+    new_findings.append({
+        "source": "viz_tool",
+        "skipped": "no chartable data",
+    })
     return {"findings": new_findings}
 
 
