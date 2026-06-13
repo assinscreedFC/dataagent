@@ -45,7 +45,8 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. Sur erreur d'exécution, le tool retry au moins une fois avec une query corrigée
   3. Le résultat d'une query valide est poussé dans `findings` avec sa source
   4. Une question dont le SQL initial échoue finit quand même par produire un finding correct
-**Plans**: TBD
+**Plans**: 1 plan
+  - [ ] 02-01-PLAN.md — Validation EXPLAIN pré-exec + boucle retry bornée (SQL_MAX_RETRIES) + finding enrichi/erreur + tests
 
 ### Phase 3: Stats & Viz Tools
 **Goal**: L'agent dispose de deux nouveaux tools — analyse statistique (Polars) et visualisation (plotly) — qui enrichissent les findings.
@@ -100,7 +101,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. State Foundation & Minimal Graph | 3/3 | Complete | 2026-06-13 |
-| 2. SQL Tool Hardening | 0/TBD | Not started | - |
+| 2. SQL Tool Hardening | 0/1 | Not started | - |
 | 3. Stats & Viz Tools | 0/TBD | Not started | - |
 | 4. Router & Critic Loop | 0/TBD | Not started | - |
 | 5. Resumability | 0/TBD | Not started | - |
