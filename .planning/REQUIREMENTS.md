@@ -50,29 +50,29 @@ Requirements pour l'agent complet (jalons J2→J4). J1 data layer déjà validé
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| GRAPH-01 | TBD | Pending |
-| GRAPH-02 | TBD | Pending |
-| GRAPH-03 | TBD | Pending |
-| GRAPH-04 | TBD | Pending |
-| GRAPH-05 | TBD | Pending |
-| GRAPH-06 | TBD | Pending |
-| TOOL-01 | TBD | Pending |
-| TOOL-02 | TBD | Pending |
-| TOOL-03 | TBD | Pending |
-| TOOL-04 | TBD | Pending |
-| TOOL-05 | TBD | Pending |
-| TOOL-06 | TBD | Pending |
-| TOOL-07 | TBD | Pending |
-| TOOL-08 | TBD | Pending |
-| EVAL-01 | TBD | Pending |
-| API-01 | TBD | Pending |
-| DEMO-01 | TBD | Pending |
+| GRAPH-01 | Phase 1 | Pending |
+| GRAPH-02 | Phase 1 | Pending |
+| GRAPH-03 | Phase 1 | Pending |
+| GRAPH-04 | Phase 1 | Pending |
+| GRAPH-05 | Phase 1 | Pending |
+| GRAPH-06 | Phase 1 | Pending |
+| TOOL-01 | Phase 2 | Pending |
+| TOOL-02 | Phase 3 | Pending |
+| TOOL-03 | Phase 3 | Pending |
+| TOOL-04 | Phase 4 | Pending |
+| TOOL-05 | Phase 4 | Pending |
+| TOOL-06 | Phase 4 | Pending |
+| TOOL-07 | Phase 5 | Pending |
+| TOOL-08 | Phase 4 | Pending |
+| EVAL-01 | Phase 6 | Pending |
+| API-01 | Phase 6 | Pending |
+| DEMO-01 | Phase 6 | Pending |
 
 **Coverage:**
 - v1 requirements: 17 total
-- Mapped to phases: 0 (rempli par le roadmap)
-- Unmapped: 17 ⚠️
+- Mapped to phases: 17 ✓
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-06-13*
-*Last updated: 2026-06-13 after initial definition*
+*Last updated: 2026-06-13 after roadmap creation*
